@@ -360,23 +360,24 @@ do
             fovCircle.Visible = false
         end
 
-        if not f.AimbotEnabled then
-            lockedPlayer = nil bindWasActive = false return
-        end
-
         local bind = f.AimbotBind
-        -- Check key state directly so game_event doesn't block us
+        local bindMode = bind and bind.Mode or "Toggle"
+
         local active = false
-        if bind and bind.Key and bind.Key ~= "NONE" then
-            local mode = bind.Mode or "Toggle"
-            if mode == "Hold" then
-                -- Always check physical key state for Hold
+        if bindMode == "Hold" then
+            -- Hold mode: bypass main toggle, activate only while key is physically held
+            if bind and bind.Key and bind.Key ~= "NONE" then
                 local ok, held = pcall(function()
                     return UIS:IsKeyDown(bind.Key)
                 end)
                 active = ok and held or false
-            else
-                -- Toggle/Always: use the flag's Active value
+            end
+        else
+            -- Toggle/Always mode: main toggle must be on
+            if not f.AimbotEnabled then
+                lockedPlayer = nil bindWasActive = false return
+            end
+            if bind and bind.Key and bind.Key ~= "NONE" then
                 active = bind.Active or false
             end
         end
