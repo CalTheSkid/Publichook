@@ -25,6 +25,29 @@ local function w2s(pos)
     return Vector2.new(screen.X, screen.Y), screen.Z
 end
 
+-- Returns true if player should be targeted/shown
+-- Respects TeamCheck and AliveCheck flags globally
+local function isEnemy(player)
+    if player == LocalPlayer then return false end
+    local f = flags()
+
+    -- Alive check
+    if f.AliveCheck then
+        local char = player.Character
+        local hum  = char and char:FindFirstChildOfClass("Humanoid")
+        if not hum or hum.Health <= 0 then return false end
+    end
+
+    -- Team check
+    if f.TeamCheck then
+        local myTeam    = LocalPlayer.Team
+        local theirTeam = player.Team
+        if myTeam and theirTeam and myTeam == theirTeam then return false end
+    end
+
+    return true
+end
+
 local function getBoundingBox(char)
     local root = char:FindFirstChild("HumanoidRootPart")
     if not root then return nil end
@@ -138,8 +161,9 @@ RunService.RenderStepped:Connect(function()
         local char     = player.Character
         local humanoid = char and char:FindFirstChildOfClass("Humanoid")
         local alive    = humanoid and humanoid.Health > 0
+        local show     = isEnemy(player) and alive
 
-        if espOn and showChams and alive then
+        if espOn and showChams and show then
             obj.highlight.Adornee          = char
             obj.highlight.FillColor        = chamsColor
             obj.highlight.FillTransparency = chamsAlpha
@@ -149,7 +173,7 @@ RunService.RenderStepped:Connect(function()
             obj.highlight.Enabled = false
         end
 
-        if not espOn or not alive then
+        if not espOn or not show then
             for _, l in ipairs(obj.boxLines) do l.Visible = false end
             obj.nameTag.Visible  = false
             obj.distTag.Visible  = false
@@ -264,14 +288,6 @@ do
     fovCircle.Visible    = false
     fovCircle.NumSides   = 64
 
-    local function playerIsValid(p)
-        if not p or not p.Parent then return false end
-        local char = p.Character
-        if not char then return false end
-        local hum = char:FindFirstChildOfClass("Humanoid")
-        return hum ~= nil and hum.Health > 0
-    end
-
     local function getAimPart(p)
         local char = p and p.Character
         if not char then return nil end
@@ -292,8 +308,7 @@ do
         local mousePos = getMousePos()
         local best, bestVal = nil, math.huge
         for _, p in ipairs(Players:GetPlayers()) do
-            if p == LocalPlayer then continue end
-            if not playerIsValid(p) then continue end
+            if not isEnemy(p) then continue end
             local part = getAimPart(p)
             if not part then continue end
             local sp, inView = Camera:WorldToViewportPoint(part.Position)
@@ -367,8 +382,8 @@ do
             bindWasActive = true
         end
 
-        -- Target died or left → always find a new one
-        if not playerIsValid(lockedPlayer) then
+        -- Target died/left/became teammate → find a new one
+        if not isEnemy(lockedPlayer) then
             lockedPlayer = pickTarget(fov, mode)
         end
 

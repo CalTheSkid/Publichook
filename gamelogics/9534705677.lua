@@ -55,6 +55,29 @@ local function getMousePos()
     return Vector2.new(pos.X, pos.Y)
 end
 
+-- Returns true if player should be targeted/shown
+-- Respects TeamCheck and AliveCheck flags globally
+local function isEnemy(player)
+    if player == LocalPlayer then return false end
+    local f = flags()
+
+    -- Alive check
+    if f.AliveCheck then
+        local char = player.Character
+        local hum  = char and char:FindFirstChildOfClass("Humanoid")
+        if not hum or hum.Health <= 0 then return false end
+    end
+
+    -- Team check
+    if f.TeamCheck then
+        local myTeam   = LocalPlayer.Team
+        local theirTeam = player.Team
+        if myTeam and theirTeam and myTeam == theirTeam then return false end
+    end
+
+    return true
+end
+
 -- ─── ESP ────────────────────────────────────────────────────────────────────
 
 local espObjects = {}
@@ -139,8 +162,9 @@ RunService.RenderStepped:Connect(function()
         local char     = player.Character
         local humanoid = char and char:FindFirstChildOfClass("Humanoid")
         local alive    = humanoid and humanoid.Health > 0
+        local show     = isEnemy(player) and alive
 
-        if espOn and showChams and alive then
+        if espOn and showChams and show then
             obj.highlight.Adornee          = char
             obj.highlight.FillColor        = chamsColor
             obj.highlight.FillTransparency = chamsAlpha
@@ -150,7 +174,7 @@ RunService.RenderStepped:Connect(function()
             obj.highlight.Enabled = false
         end
 
-        if not espOn or not alive then
+        if not espOn or not show then
             for _, l in ipairs(obj.boxLines) do l.Visible = false end
             obj.nameTag.Visible = false obj.distTag.Visible = false
             obj.healthBg.Visible = false obj.healthBar.Visible = false
@@ -296,8 +320,7 @@ do
         local mousePos = getMousePos()
         local best, bestVal = nil, math.huge
         for _, p in ipairs(Players:GetPlayers()) do
-            if p == LocalPlayer then continue end
-            if not playerIsValid(p) then continue end
+            if not isEnemy(p) then continue end
             local part = getAimPart(p)
             if not part then continue end
             local sp, inView = Camera:WorldToViewportPoint(part.Position)
@@ -356,7 +379,7 @@ do
             lockedPlayer  = pickTarget(fov, mode)
             bindWasActive = true
         end
-        if not playerIsValid(lockedPlayer) then
+        if not isEnemy(lockedPlayer) then
             lockedPlayer = pickTarget(fov, mode)
         end
         if not hardLock and lockedPlayer and not isInFOV(lockedPlayer, fov) then
@@ -409,8 +432,7 @@ do
         local mousePos = getMousePos()
         local best, bestVal = nil, math.huge
         for _, p in ipairs(Players:GetPlayers()) do
-            if p == LocalPlayer then continue end
-            if not playerIsValid(p) then continue end
+            if not isEnemy(p) then continue end
             local part = getSilentPart(p)
             if not part then continue end
             local sp, inView = Camera:WorldToViewportPoint(part.Position)

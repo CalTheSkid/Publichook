@@ -148,6 +148,30 @@ local Config = {
                             Elements = {
                                 {
                                     Type = "Toggle",
+                                    Name = "Team Check",
+                                    Flag = "TeamCheck",
+                                    Default = true,
+                                    Callback = function() end,
+                                    Tooltip = {
+                                        Title = "Team Check",
+                                        Text = "Ignores players on your team.\nApplies to ESP, Aimbot, Silent Aim.",
+                                        Width = 170
+                                    }
+                                },
+                                {
+                                    Type = "Toggle",
+                                    Name = "Alive Check",
+                                    Flag = "AliveCheck",
+                                    Default = true,
+                                    Callback = function() end,
+                                    Tooltip = {
+                                        Title = "Alive Check",
+                                        Text = "Ignores dead players.\nApplies to ESP, Aimbot, Silent Aim.",
+                                        Width = 170
+                                    }
+                                },
+                                {
+                                    Type = "Toggle",
                                     Name = "Enabled",
                                     Flag = "MovementEnabled",
                                     Default = false,
