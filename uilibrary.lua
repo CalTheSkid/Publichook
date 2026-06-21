@@ -7413,6 +7413,8 @@
     }; do 
         Esp.ScreenGui.IgnoreGuiInset = true
         Esp.ScreenGui.Name = "EspObject"
+        Esp.ScreenGui.DisplayOrder = 99
+        Esp.ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
         Esp.Cache.Enabled = false   
 
@@ -8201,8 +8203,7 @@
                 end 
             end 
 
-            Data.RefreshDescendants()
-            Esp:Connection(Data.Info.Character.ChildAdded, Data.ToolAdded)
+            task.spawn(Data.RefreshDescendants)
             Esp:Connection(player.CharacterAdded, Data.RefreshDescendants)
 
             -- Recaching element holders that arent neccessary <- roblox calculates math for them even if they have no objects in them or invisible ;(

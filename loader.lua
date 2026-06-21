@@ -245,8 +245,15 @@ local Players = game:GetService("Players")
 
 local function setupPlayer(player)
     if player == Players.LocalPlayer then return end
-    pcall(function()
-        Esp.CreateObject(player)
+    task.spawn(function()
+        local ok, err = pcall(function()
+            Esp.CreateObject(player)
+        end)
+        if not ok then
+            warn("[publichook] ESP setup failed for " .. player.Name .. ": " .. tostring(err))
+        else
+            print("[publichook] ESP created for " .. player.Name)
+        end
     end)
 end
 
