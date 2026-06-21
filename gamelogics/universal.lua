@@ -297,6 +297,7 @@ task.spawn(function()
         local f = flags()
         if not (f.AimbotEnabled) then continue end
         local bind = f.AimbotBind
+        print(bind)
         if not (bind and bind.Active) then continue end
 
         local fov    = f.AimbotFOVRadius or 120
