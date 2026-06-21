@@ -193,7 +193,7 @@ local Config = {
                                     Name = "Speed Mode",
                                     Flag = "MovementWSMode",
                                     Options = {"Velocity", "Teleport"},
-                                    Default = "Teleport",
+                                    Default = "Velocity",
                                     Callback = function() end
                                 },
                                 {
