@@ -71,7 +71,7 @@ if type(configTable) ~= "table" then
 end
 
 local logicContent = fetchFile("gamelogics/" .. gameId .. ".lua")
-if not logicContent then
+if not logicContent or logicContent == "" or logicContent == nil then
     print("[publichook] Specific game logic not found. Falling back to universal logic.")
     logicContent = fetchFile("gamelogics/universal.lua")
 end
@@ -234,8 +234,9 @@ local function buildUI(config)
 end
 
 local Window = buildUI(configTable)
-
+print("a")
 if logicContent then
+    print("[publichook] Executing gameplay logic for Game ID: " .. gameId)
     local logicFunction, compileErr = loadstring(logicContent)
     if logicFunction then
         task.spawn(function()
