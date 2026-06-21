@@ -271,19 +271,54 @@ end)
 -- ─── BHOP ───────────────────────────────────────────────────────────────────
 
 task.spawn(function()
+    local bhopTimeout = 0
+    local wasGrounded = false
+    local lastJumpTime = 0
+    local shortLands = 0
+
     while task.wait() do
         local f = flags()
-        if not f.Bhop then continue end
+        if not f.Bhop then
+            shortLands = 0
+            continue
+        end
         local char = LocalPlayer.Character
         local hum  = char and char:FindFirstChildOfClass("Humanoid")
         local root = char and char:FindFirstChild("HumanoidRootPart")
         if not hum or not root then continue end
 
-        -- Only jump when on the ground to avoid fighting with physics
         local grounded = hum.FloorMaterial ~= Enum.Material.Air
+
+        -- Bhop Timeout: detect spam-jumping into a ceiling
+        if f.BhopTimeout then
+            if tick() < bhopTimeout then
+                wasGrounded = grounded
+                continue
+            end
+
+            if grounded and not wasGrounded then
+                -- Just landed — check if airtime was suspiciously short
+                local airTime = tick() - lastJumpTime
+                if airTime < 0.35 then
+                    shortLands = shortLands + 1
+                    if shortLands >= 3 then
+                        bhopTimeout = tick() + tonumber(f.BhopTimeoutTime or 3)
+                        shortLands = 0
+                        wasGrounded = grounded
+                        continue
+                    end
+                else
+                    shortLands = 0
+                end
+            end
+        end
+
         if grounded then
             hum:ChangeState(Enum.HumanoidStateType.Jumping)
+            lastJumpTime = tick()
         end
+
+        wasGrounded = grounded
     end
 end)
 
