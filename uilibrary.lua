@@ -391,21 +391,20 @@
         end
 
         function Library:ConvertEnum(enum)
-            local EnumParts = {}
-
-            for _,part in string.gmatch(tostring(enum), "[%w_]+") do
-                table.insert(EnumParts, part)
+            local parts = {}
+            for part in string.gmatch(tostring(enum), "[%w_]+") do
+                table.insert(parts, part)
             end
             
-            local EnumTable = tostring(enum)  
+            if #parts < 2 then return nil end
 
-            for i = 2, #EnumParts do
-                local EnumItem = EnumTable[EnumParts[i]]
-        
-                EnumTable = EnumItem
+            local result = Enum
+            for i = 2, #parts do
+                result = result[parts[i]]
+                if not result then return nil end
             end
             
-            return EnumTable
+            return result
         end
 
         local ConfigHolder;
