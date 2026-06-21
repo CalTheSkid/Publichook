@@ -262,14 +262,11 @@ task.spawn(function()
     end
 end)
 
--- ─── AIMBOT + SILENT AIM ────────────────────────────────────────────────────
+-- ─── AIMBOT ─────────────────────────────────────────────────────────────────
 
 do
     local lockedPlayer  = nil
     local bindWasActive = false
-
-    -- Exposed for silent aim hook
-    local cachedTargetPart = nil
 
     local fovCircle = Drawing.new("Circle")
     fovCircle.Thickness = 1
@@ -283,13 +280,6 @@ do
         local char = p.Character
         if not char then return false end
         local hum = char:FindFirstChildOfClass("Humanoid")
-        return hum ~= nil and hum.Health > 0
-    end
-
-    -- isValidTarget takes a BasePart, checks its ancestor character
-    local function isValidTarget(part)
-        if not part or not part.Parent then return false end
-        local hum = part.Parent:FindFirstChildOfClass("Humanoid")
         return hum ~= nil and hum.Health > 0
     end
 
@@ -319,9 +309,7 @@ do
                 val = p.Character:FindFirstChildOfClass("Humanoid").Health
             elseif mode == "Distance" then
                 val = (part.Position - Camera.CFrame.Position).Magnitude
-            else
-                val = d2
-            end
+            else val = d2 end
             if val < bestVal then best, bestVal = p, val end
         end
         return best
@@ -349,18 +337,13 @@ do
         end
 
         if not f.AimbotEnabled then
-            lockedPlayer = nil bindWasActive = false
-            cachedTargetPart = nil
-            return
+            lockedPlayer = nil bindWasActive = false return
         end
 
         local bind   = f.AimbotBind
         local active = bind and bind.Active or false
-
         if not active then
-            lockedPlayer = nil bindWasActive = false
-            cachedTargetPart = nil
-            return
+            lockedPlayer = nil bindWasActive = false return
         end
 
         local fov      = f.AimbotFOVRadius or 120
@@ -373,28 +356,107 @@ do
             lockedPlayer  = pickTarget(fov, mode)
             bindWasActive = true
         end
-
         if not playerIsValid(lockedPlayer) then
             lockedPlayer = pickTarget(fov, mode)
         end
-
         if not hardLock and lockedPlayer and not isInFOV(lockedPlayer, fov) then
             lockedPlayer = pickTarget(fov, mode)
         end
 
         local part = getAimPart(lockedPlayer)
-        cachedTargetPart = part  -- always keep this up to date for silent aim
-
         if not part then return end
+        Camera.CFrame = Camera.CFrame:Lerp(CFrame.new(Camera.CFrame.Position, part.Position), alpha)
+    end)
+end
 
-        local targetCF = CFrame.new(Camera.CFrame.Position, part.Position)
-        Camera.CFrame  = Camera.CFrame:Lerp(targetCF, alpha)
+-- ─── SILENT AIM ─────────────────────────────────────────────────────────────
+
+do
+    -- Fully independent from aimbot: own FOV, own hit part, own target cache
+    local cachedSilentTarget = nil  -- BasePart
+
+    local saFOVCircle = Drawing.new("Circle")
+    saFOVCircle.Thickness = 1
+    saFOVCircle.Color     = Color3.fromRGB(255, 100, 100)
+    saFOVCircle.Filled    = false
+    saFOVCircle.Visible   = false
+    saFOVCircle.NumSides  = 64
+
+    local function playerIsValid(p)
+        if not p or not p.Parent then return false end
+        local char = p.Character
+        if not char then return false end
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        return hum ~= nil and hum.Health > 0
+    end
+
+    local function isValidPart(part)
+        if not part or not part.Parent then return false end
+        local hum = part.Parent:FindFirstChildOfClass("Humanoid")
+        return hum ~= nil and hum.Health > 0
+    end
+
+    local function getSilentPart(p)
+        local char = p and p.Character
+        if not char then return nil end
+        local hitPart = flags().SilentAimHitPart or "Head"
+        return char:FindFirstChild(hitPart)
+            or char:FindFirstChild("Head")
+            or char:FindFirstChild("HumanoidRootPart")
+    end
+
+    local function pickSilentTarget(fov, mode)
+        local mousePos = getMousePos()
+        local best, bestVal = nil, math.huge
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p == LocalPlayer then continue end
+            if not playerIsValid(p) then continue end
+            local part = getSilentPart(p)
+            if not part then continue end
+            local sp, inView = Camera:WorldToViewportPoint(part.Position)
+            if not inView or sp.Z <= 0 then continue end
+            local d2 = (Vector2.new(sp.X, sp.Y) - mousePos).Magnitude
+            if d2 > fov then continue end
+            local val
+            if mode == "Health" then
+                val = p.Character:FindFirstChildOfClass("Humanoid").Health
+            elseif mode == "Distance" then
+                val = (part.Position - Camera.CFrame.Position).Magnitude
+            else val = d2 end
+            if val < bestVal then best, bestVal = part, val end
+        end
+        return best
+    end
+
+    -- Update cached target every frame
+    RunService.RenderStepped:Connect(function()
+        local f = flags()
+
+        if f.SilentAimFOVCircle then
+            local cd = f.SilentAimFOVCircleColor
+            saFOVCircle.Color    = cd and cd.Color or Color3.fromRGB(255,100,100)
+            saFOVCircle.Radius   = f.SilentAimFOV or 200
+            saFOVCircle.Position = getMousePos()
+            saFOVCircle.Visible  = true
+        else
+            saFOVCircle.Visible = false
+        end
+
+        if not f.SilentAim then
+            cachedSilentTarget = nil
+            return
+        end
+
+        local fov  = f.SilentAimFOV or 200
+        local mode = f.SilentAimTargetMode or "FOV"
+
+        -- Re-pick if current target is dead/gone, otherwise keep lock
+        if not isValidPart(cachedSilentTarget) then
+            cachedSilentTarget = pickSilentTarget(fov, mode)
+        end
     end)
 
-    -- ─── SILENT AIM HOOK ────────────────────────────────────────────────────
-    -- Hooks CameraController.GetTargeting so bullets redirect to the locked
-    -- target without moving the crosshair.
-
+    -- Hook
     if not getgenv()._SilentAimHooked then
         getgenv()._SilentAimHooked = true
 
@@ -408,8 +470,7 @@ do
                 return
             end
 
-            local originalGetTargetingFn = CameraController.GetTargetingFn
-            local originalGetTargeting   = originalGetTargetingFn()
+            local originalGetTargeting = CameraController.GetTargetingFn()
 
             if not hookfunction or not originalGetTargeting then
                 warn("[publichook] Silent Aim: hookfunction unavailable or GetTargeting is nil")
@@ -420,7 +481,6 @@ do
             original = hookfunction(originalGetTargeting, newcclosure(function(...)
                 local results = {original(...)}
 
-                -- Log structure once so we know which index is the target part
                 if not getgenv()._TargetingDebugLogged then
                     getgenv()._TargetingDebugLogged = true
                     print("=== GetTargeting() Return Values ===")
@@ -430,19 +490,14 @@ do
                     print("=====================================")
                 end
 
-                if flags().SilentAim and cachedTargetPart and isValidTarget(cachedTargetPart) then
-                    -- Replace index 2 (the target part) with our locked target.
-                    -- If the debug log shows a different index holds the BasePart,
-                    -- update this number accordingly.
-                    results[2] = cachedTargetPart
-                else
-                    cachedTargetPart = nil
+                if flags().SilentAim and isValidPart(cachedSilentTarget) then
+                    results[2] = cachedSilentTarget
                 end
 
                 return unpack(results)
             end))
 
-            print("[publichook] Silent Aim: hook installed successfully")
+            print("[publichook] Silent Aim: hook installed")
         end
 
         task.delay(0.5, hookTargetingSystem)

@@ -86,18 +86,64 @@ local Config = {
                                         Text = "When enabled, stays locked onto the target\neven if they leave your FOV circle.\nOnly unlocks if the target dies or leaves.",
                                         Width = 180
                                     }
-                                },
+                                }
+                            }
+                        },
+                        {
+                            Name = "Silent Aim",
+                            Side = "Left",
+                            Elements = {
                                 {
                                     Type = "Toggle",
-                                    Name = "Silent Aim",
+                                    Name = "Enabled",
                                     Flag = "SilentAim",
                                     Default = false,
                                     Callback = function() end,
                                     Tooltip = {
                                         Title = "Silent Aim",
-                                        Text = "Hooks the game targeting system\nso bullets hit the locked target\nwithout moving your crosshair.",
+                                        Text = "Hooks the game targeting system\nso bullets hit the closest target\nwithout moving your crosshair.",
                                         Width = 180
                                     }
+                                },
+                                {
+                                    Type = "Slider",
+                                    Name = "FOV Radius",
+                                    Flag = "SilentAimFOV",
+                                    Min = 10,
+                                    Max = 800,
+                                    Decimal = 1,
+                                    Default = 200,
+                                    Suffix = "px",
+                                    Callback = function() end
+                                },
+                                {
+                                    Type = "Toggle",
+                                    Name = "Show FOV Circle",
+                                    Flag = "SilentAimFOVCircle",
+                                    Default = false,
+                                    Callback = function() end,
+                                    Colorpicker = {
+                                        Name = "FOV Circle Color",
+                                        Flag = "SilentAimFOVCircleColor",
+                                        Color = Color3.fromRGB(255, 100, 100),
+                                        Transparency = 0
+                                    }
+                                },
+                                {
+                                    Type = "Dropdown",
+                                    Name = "Hit Part",
+                                    Flag = "SilentAimHitPart",
+                                    Options = {"Head", "HumanoidRootPart", "Torso", "Left Arm", "Right Arm", "Left Leg", "Right Leg"},
+                                    Default = "Head",
+                                    Callback = function() end
+                                },
+                                {
+                                    Type = "Dropdown",
+                                    Name = "Target Mode",
+                                    Flag = "SilentAimTargetMode",
+                                    Options = {"FOV", "Distance", "Health"},
+                                    Default = "FOV",
+                                    Callback = function() end
                                 }
                             }
                         },
