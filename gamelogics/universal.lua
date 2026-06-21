@@ -300,13 +300,13 @@ end)
 -- ─── AIMBOT ─────────────────────────────────────────────────────────────────
 
 do
-    local aimbotConnection = nil
+    local lockedTarget = nil  -- sticky: holds the locked BasePart (head/root)
 
-    local function stopAimbot()
-        if aimbotConnection then
-            aimbotConnection:Disconnect()
-            aimbotConnection = nil
-        end
+    local function isValidTarget(part)
+        if not part or not part.Parent then return false end
+        local char = part.Parent
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        return hum and hum.Health > 0
     end
 
     local function getBestTarget(fov, mode)
@@ -347,22 +347,45 @@ do
         return bestPart
     end
 
+    local bindWasActive = false
+
     RunService:BindToRenderStep("publichook_aimbot", Enum.RenderPriority.Camera.Value + 1, function()
         local f = flags()
-        if not f.AimbotEnabled then return end
+        if not f.AimbotEnabled then
+            lockedTarget = nil
+            bindWasActive = false
+            return
+        end
 
         local bind = f.AimbotBind
-        if not (bind and bind.Active) then return end
+        local active = bind and bind.Active or false
+
+        if not active then
+            -- release clears the lock so next press picks fresh
+            lockedTarget = nil
+            bindWasActive = false
+            return
+        end
 
         local fov    = f.AimbotFOVRadius or 120
         local mode   = f.AimbotTargetMode or "Distance"
         local smooth = f.AimbotSmooth or 20
         local alpha  = 1 - ((smooth - 1) / 99 * 0.95)
 
-        local target = getBestTarget(fov, mode)
-        if not target then return end
+        -- On fresh press, pick a new target
+        if not bindWasActive then
+            lockedTarget = getBestTarget(fov, mode)
+        end
+        bindWasActive = true
 
-        local targetCF = CFrame.new(Camera.CFrame.Position, target.Position)
-        Camera.CFrame = Camera.CFrame:Lerp(targetCF, alpha)
+        -- Validate sticky target is still alive and on screen
+        if not isValidTarget(lockedTarget) then
+            lockedTarget = getBestTarget(fov, mode)
+        end
+
+        if lockedTarget then
+            local targetCF = CFrame.new(Camera.CFrame.Position, lockedTarget.Position)
+            Camera.CFrame = Camera.CFrame:Lerp(targetCF, alpha)
+        end
     end)
 end
