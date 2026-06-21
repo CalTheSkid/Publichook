@@ -242,8 +242,9 @@ task.spawn(function()
     end
 end)
 
--- ─── WALKSPEED (velocity only, no mode dropdown) ────────────────────────────
+-- ─── WALKSPEED (velocity + teleport modes) ──────────────────────────────────
 
+-- Velocity mode (default) — runs every 0.1s
 task.spawn(function()
     while task.wait(0.1) do
         local char = LocalPlayer.Character
@@ -257,16 +258,42 @@ task.spawn(function()
             continue
         end
 
+        local mode  = f.MovementWSMode or "Velocity"
         local speed = f.MovementWalkSpeed or 50
-        -- Always velocity mode in Sniper Arena
-        hum.WalkSpeed = 16 -- keep humanoid default so game doesn't reset us
-        if hum.MoveDirection.Magnitude > 0 then
-            root.AssemblyLinearVelocity = Vector3.new(
-                hum.MoveDirection.X * speed,
-                root.AssemblyLinearVelocity.Y,
-                hum.MoveDirection.Z * speed
-            )
+
+        if mode == "Teleport" then
+            -- Teleport mode handled on Heartbeat below
+            hum.WalkSpeed = 16
+        else
+            -- Velocity / Humanoid mode
+            hum.WalkSpeed = 16
+            if hum.MoveDirection.Magnitude > 0 then
+                root.AssemblyLinearVelocity = Vector3.new(
+                    hum.MoveDirection.X * speed,
+                    root.AssemblyLinearVelocity.Y,
+                    hum.MoveDirection.Z * speed
+                )
+            end
         end
+    end
+end)
+
+-- Teleport mode (bypasses server speed checks)
+RunService.Heartbeat:Connect(function(dt)
+    local f = flags()
+    if not f.MovementEnabled then return end
+    local mode = f.MovementWSMode or "Velocity"
+    if mode ~= "Teleport" then return end
+
+    local char = LocalPlayer.Character
+    local hum  = char and char:FindFirstChildOfClass("Humanoid")
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    if not hum or not root then return end
+
+    local speed = f.MovementWalkSpeed or 50
+    local move  = hum.MoveDirection
+    if move.Magnitude > 0 then
+        root.CFrame = root.CFrame + move.Unit * speed * dt
     end
 end)
 
