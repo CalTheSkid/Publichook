@@ -226,6 +226,22 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
+-- ─── WALKSPEED KICK BYPASS ───────────────────────────────────────────────────
+
+task.spawn(function()
+    local ok, LocalEntity = pcall(require, game:GetService("ReplicatedStorage")
+        .Remote.EntityService.Entity.HumanoidEntity.PlayerEntity.LocalEntity)
+    if not ok then return end
+
+    LocalEntity._HumanoidWalkSpeed = math.huge
+
+    local old = LocalEntity.UpdateWalkSpeed
+    LocalEntity.UpdateWalkSpeed = function(self, ...)
+        old(self, ...)
+        self._HumanoidWalkSpeed = math.huge
+    end
+end)
+
 -- ─── WALKSPEED (velocity only, no mode dropdown) ────────────────────────────
 
 task.spawn(function()
