@@ -206,29 +206,6 @@ local Config = {
                                         Text = "Works best with\nNo Jump Cooldown enabled.",
                                         Width = 160
                                     }
-                                },
-                                {
-                                    Type = "Toggle",
-                                    Name = "Bhop Timeout",
-                                    Flag = "BhopTimeout",
-                                    Default = false,
-                                    Callback = function() end,
-                                    Tooltip = {
-                                        Title = "Bhop Timeout",
-                                        Text = "Detects if you're spam jumping into a ceiling and disables bhop for a few seconds.",
-                                        Width = 220
-                                    }
-                                },
-                                {
-                                    Type = "Slider",
-                                    Name = "Timeout Time",
-                                    Flag = "BhopTimeoutTime",
-                                    Min = 1,
-                                    Max = 10,
-                                    Decimal = 0.5,
-                                    Default = 3,
-                                    Suffix = "s",
-                                    Callback = function() end
                                 }
                             }
                         }

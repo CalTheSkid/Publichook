@@ -271,54 +271,25 @@ end)
 -- ─── BHOP ───────────────────────────────────────────────────────────────────
 
 task.spawn(function()
-    local bhopTimeout = 0
-    local wasGrounded = false
-    local lastJumpTime = 0
-    local shortLands = 0
-
     while task.wait() do
         local f = flags()
-        if not f.Bhop then
-            shortLands = 0
-            continue
-        end
+        if not f.Bhop then continue end
         local char = LocalPlayer.Character
         local hum  = char and char:FindFirstChildOfClass("Humanoid")
         local root = char and char:FindFirstChild("HumanoidRootPart")
         if not hum or not root then continue end
 
-        local grounded = hum.FloorMaterial ~= Enum.Material.Air
-
-        -- Bhop Timeout: detect spam-jumping into a ceiling
-        if f.BhopTimeout then
-            if tick() < bhopTimeout then
-                wasGrounded = grounded
-                continue
-            end
-
-            if grounded and not wasGrounded then
-                -- Just landed — check if airtime was suspiciously short
-                local airTime = tick() - lastJumpTime
-                if airTime < 0.35 then
-                    shortLands = shortLands + 1
-                    if shortLands >= 3 then
-                        bhopTimeout = tick() + tonumber(f.BhopTimeoutTime or 3)
-                        shortLands = 0
-                        wasGrounded = grounded
-                        continue
-                    end
-                else
-                    shortLands = 0
-                end
-            end
+        -- Don't jump if there's a ceiling within 10 studs above the head
+        local head = char:FindFirstChild("Head") or root
+        if head then
+            local raycast = workspace:Raycast(head.Position, Vector3.new(0, 10, 0))
+            if raycast then continue end
         end
 
+        local grounded = hum.FloorMaterial ~= Enum.Material.Air
         if grounded then
             hum:ChangeState(Enum.HumanoidStateType.Jumping)
-            lastJumpTime = tick()
         end
-
-        wasGrounded = grounded
     end
 end)
 
