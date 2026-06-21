@@ -1,9 +1,10 @@
-local Players = game:GetService("Players")
+local Players    = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local Camera = workspace.CurrentCamera
+local UIS        = game:GetService("UserInputService")
+local Camera     = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
-print("[publichook] Universal logic loaded.")
+print("[publichook] Sniper Arena logic loaded.")
 
 -- ─── HELPERS ────────────────────────────────────────────────────────────────
 
@@ -28,9 +29,9 @@ end
 local function getBoundingBox(char)
     local root = char:FindFirstChild("HumanoidRootPart")
     if not root then return nil end
-    local head = char:FindFirstChild("Head")
-    local top = head and head.Position + Vector3.new(0, head.Size.Y / 2 + 0.1, 0)
-             or root.Position + Vector3.new(0, 3, 0)
+    local head   = char:FindFirstChild("Head")
+    local top    = head and head.Position + Vector3.new(0, head.Size.Y / 2 + 0.1, 0)
+               or root.Position + Vector3.new(0, 3, 0)
     local bottom = root.Position - Vector3.new(0, 3, 0)
     local topScreen, dist = w2s(top)
     local bottomScreen    = w2s(bottom)
@@ -46,8 +47,12 @@ local function getBoundingBox(char)
         center = Vector2.new(cx, topScreen.Y),
         bottom = bottomScreen,
         dist   = dist,
-        height = height,
     }
+end
+
+local function getMousePos()
+    local pos = UIS:GetMouseLocation()
+    return Vector2.new(pos.X, pos.Y)
 end
 
 -- ─── ESP ────────────────────────────────────────────────────────────────────
@@ -66,19 +71,16 @@ local function createEspFor(player)
             Transparency = 1, Visible = false,
         })
     end
-
     obj.nameTag = newDrawing("Text", {
         Size = 13, Color = Color3.fromRGB(255,255,255),
         Outline = true, OutlineColor = Color3.fromRGB(0,0,0),
         Center = true, Visible = false, Text = player.Name,
     })
-
     obj.distTag = newDrawing("Text", {
         Size = 11, Color = Color3.fromRGB(200,200,200),
         Outline = true, OutlineColor = Color3.fromRGB(0,0,0),
         Center = true, Visible = false, Text = "",
     })
-
     obj.healthBg = newDrawing("Line", {
         Thickness = 4, Color = Color3.fromRGB(0,0,0),
         Transparency = 0.5, Visible = false,
@@ -87,12 +89,11 @@ local function createEspFor(player)
         Thickness = 3, Color = Color3.fromRGB(0,255,0),
         Transparency = 1, Visible = false,
     })
-
     obj.highlight = Instance.new("Highlight")
-    obj.highlight.FillTransparency  = 0.5
-    obj.highlight.OutlineTransparency = 1
-    obj.highlight.Enabled = false
-    obj.highlight.Parent  = game:GetService("CoreGui")
+    obj.highlight.FillTransparency     = 0.5
+    obj.highlight.OutlineTransparency  = 1
+    obj.highlight.Enabled              = false
+    obj.highlight.Parent               = game:GetService("CoreGui")
 
     espObjects[player] = obj
 end
@@ -122,17 +123,17 @@ RunService.RenderStepped:Connect(function()
     local showChams= f.ESPChams      or false
     local maxDist  = f.ESPMaxDist    or 2000
 
-    local boxColor      = getColor("ESPBoxColor",       Color3.fromRGB(255,255,255))
-    local nameColor     = getColor("ESPNameColor",      Color3.fromRGB(255,255,255))
-    local distColor     = getColor("ESPDistanceColor",  Color3.fromRGB(200,200,200))
-    local hpHighColor   = getColor("ESPHealthHighColor",Color3.fromRGB(0,255,0))
-    local hpLowColor    = getColor("ESPHealthLowColor", Color3.fromRGB(255,0,0))
-    local hpBgColor     = getColor("ESPHealthBgColor",  Color3.fromRGB(0,0,0))
-    local chamsData     = f.ESPChamsColor
-    local chamsColor    = chamsData and chamsData.Color or Color3.fromRGB(255,0,0)
-    local chamsAlpha    = chamsData and chamsData.Transparency or 0.5
-    local chamsOutData  = f.ESPChamsOutlineColor
-    local chamsOutColor = chamsOutData and chamsOutData.Color or Color3.fromRGB(255,255,255)
+    local boxColor     = getColor("ESPBoxColor",        Color3.fromRGB(255,255,255))
+    local nameColor    = getColor("ESPNameColor",       Color3.fromRGB(255,255,255))
+    local distColor    = getColor("ESPDistanceColor",   Color3.fromRGB(200,200,200))
+    local hpHighColor  = getColor("ESPHealthHighColor", Color3.fromRGB(0,255,0))
+    local hpLowColor   = getColor("ESPHealthLowColor",  Color3.fromRGB(255,0,0))
+    local hpBgColor    = getColor("ESPHealthBgColor",   Color3.fromRGB(0,0,0))
+    local chamsData    = f.ESPChamsColor
+    local chamsColor   = chamsData and chamsData.Color or Color3.fromRGB(255,0,0)
+    local chamsAlpha   = chamsData and chamsData.Transparency or 0.5
+    local chamsOutData = f.ESPChamsOutlineColor
+    local chamsOutColor= chamsOutData and chamsOutData.Color or Color3.fromRGB(255,255,255)
 
     for player, obj in pairs(espObjects) do
         local char     = player.Character
@@ -151,124 +152,144 @@ RunService.RenderStepped:Connect(function()
 
         if not espOn or not alive then
             for _, l in ipairs(obj.boxLines) do l.Visible = false end
-            obj.nameTag.Visible  = false
-            obj.distTag.Visible  = false
-            obj.healthBg.Visible = false
-            obj.healthBar.Visible= false
+            obj.nameTag.Visible = false obj.distTag.Visible = false
+            obj.healthBg.Visible = false obj.healthBar.Visible = false
             continue
         end
 
         local bb = getBoundingBox(char)
         if not bb or bb.dist > maxDist then
             for _, l in ipairs(obj.boxLines) do l.Visible = false end
-            obj.nameTag.Visible  = false
-            obj.distTag.Visible  = false
-            obj.healthBg.Visible = false
-            obj.healthBar.Visible= false
+            obj.nameTag.Visible = false obj.distTag.Visible = false
+            obj.healthBg.Visible = false obj.healthBar.Visible = false
             continue
         end
 
         if showBox then
             local L = obj.boxLines
-            L[1].From=bb.tl L[1].To=bb.tr
-            L[2].From=bb.bl L[2].To=bb.br
-            L[3].From=bb.tl L[3].To=bb.bl
-            L[4].From=bb.tr L[4].To=bb.br
+            L[1].From=bb.tl L[1].To=bb.tr L[2].From=bb.bl L[2].To=bb.br
+            L[3].From=bb.tl L[3].To=bb.bl L[4].From=bb.tr L[4].To=bb.br
             for _, l in ipairs(L) do l.Color=boxColor l.Visible=true end
         else
             for _, l in ipairs(obj.boxLines) do l.Visible=false end
         end
 
         if showName then
-            obj.nameTag.Text     = player.Name
-            obj.nameTag.Position = bb.center + Vector2.new(0, -3)
-            obj.nameTag.Color    = nameColor
-            obj.nameTag.Visible  = true
-        else
-            obj.nameTag.Visible = false
-        end
+            obj.nameTag.Text=player.Name obj.nameTag.Position=bb.center+Vector2.new(0,-3)
+            obj.nameTag.Color=nameColor  obj.nameTag.Visible=true
+        else obj.nameTag.Visible=false end
 
         if showDist then
-            obj.distTag.Text     = math.floor(bb.dist).."m"
-            obj.distTag.Position = bb.bottom + Vector2.new(0, 3)
-            obj.distTag.Color    = distColor
-            obj.distTag.Visible  = true
-        else
-            obj.distTag.Visible = false
-        end
+            obj.distTag.Text=math.floor(bb.dist).."m"
+            obj.distTag.Position=bb.bottom+Vector2.new(0,3)
+            obj.distTag.Color=distColor obj.distTag.Visible=true
+        else obj.distTag.Visible=false end
 
         if showHP then
-            local pct    = math.clamp(humanoid.Health / math.max(humanoid.MaxHealth, 1), 0, 1)
-            local barX   = bb.tl.X - 5
-            local barTop = bb.tl.Y
-            local barBot = bb.bl.Y
-            local fill   = barTop + (barBot - barTop) * (1 - pct)
-            local hpColor= hpLowColor:Lerp(hpHighColor, pct)
-
-            obj.healthBg.From  = Vector2.new(barX, barTop)
-            obj.healthBg.To    = Vector2.new(barX, barBot)
-            obj.healthBg.Color = hpBgColor
-            obj.healthBg.Visible = true
-
-            obj.healthBar.From  = Vector2.new(barX, fill)
-            obj.healthBar.To    = Vector2.new(barX, barBot)
-            obj.healthBar.Color = hpColor
-            obj.healthBar.Visible = true
+            local pct   = math.clamp(humanoid.Health/math.max(humanoid.MaxHealth,1),0,1)
+            local barX  = bb.tl.X-5
+            local bTop  = bb.tl.Y  local bBot = bb.bl.Y
+            local fill  = bTop+(bBot-bTop)*(1-pct)
+            local hpCol = hpLowColor:Lerp(hpHighColor, pct)
+            obj.healthBg.From=Vector2.new(barX,bTop) obj.healthBg.To=Vector2.new(barX,bBot)
+            obj.healthBg.Color=hpBgColor obj.healthBg.Visible=true
+            obj.healthBar.From=Vector2.new(barX,fill) obj.healthBar.To=Vector2.new(barX,bBot)
+            obj.healthBar.Color=hpCol obj.healthBar.Visible=true
         else
-            obj.healthBg.Visible  = false
-            obj.healthBar.Visible = false
+            obj.healthBg.Visible=false obj.healthBar.Visible=false
         end
     end
 end)
 
--- ─── WALKSPEED ──────────────────────────────────────────────────────────────
+-- ─── WALKSPEED (velocity only, no mode dropdown) ────────────────────────────
 
 task.spawn(function()
     while task.wait(0.1) do
         local char = LocalPlayer.Character
         local hum  = char and char:FindFirstChildOfClass("Humanoid")
-        if not hum then continue end
+        local root = char and char:FindFirstChild("HumanoidRootPart")
+        if not hum or not root then continue end
+
         local f = flags()
         if not f.MovementEnabled then
             if hum.WalkSpeed ~= 16 then hum.WalkSpeed = 16 end
             continue
         end
-        local speed = f.MovementWalkSpeed or 16
-        local mode  = f.MovementWSMode or "Humanoid"
-        if mode == "Humanoid" then
-            hum.WalkSpeed = speed
-        elseif mode == "Velocity" then
-            local root = char:FindFirstChild("HumanoidRootPart")
-            if root and hum.MoveDirection.Magnitude > 0 then
-                root.AssemblyLinearVelocity = Vector3.new(
-                    hum.MoveDirection.X * speed,
-                    root.AssemblyLinearVelocity.Y,
-                    hum.MoveDirection.Z * speed
-                )
-            end
+
+        local speed = f.MovementWalkSpeed or 50
+        -- Always velocity mode in Sniper Arena
+        hum.WalkSpeed = 16 -- keep humanoid default so game doesn't reset us
+        if hum.MoveDirection.Magnitude > 0 then
+            root.AssemblyLinearVelocity = Vector3.new(
+                hum.MoveDirection.X * speed,
+                root.AssemblyLinearVelocity.Y,
+                hum.MoveDirection.Z * speed
+            )
         end
     end
 end)
 
--- ─── AIMBOT ─────────────────────────────────────────────────────────────────
+-- ─── NO JUMP COOLDOWN ───────────────────────────────────────────────────────
+
+task.spawn(function()
+    while task.wait() do
+        local f = flags()
+        if not f.NoJumpCooldown then continue end
+        local char = LocalPlayer.Character
+        local hum  = char and char:FindFirstChildOfClass("Humanoid")
+        if hum then
+            hum.JumpPower = 50
+        end
+    end
+end)
+
+-- ─── BHOP ───────────────────────────────────────────────────────────────────
+
+task.spawn(function()
+    while task.wait() do
+        local f = flags()
+        if not f.Bhop then continue end
+        local char = LocalPlayer.Character
+        local hum  = char and char:FindFirstChildOfClass("Humanoid")
+        local root = char and char:FindFirstChild("HumanoidRootPart")
+        if not hum or not root then continue end
+
+        -- Only jump when on the ground to avoid fighting with physics
+        local grounded = hum.FloorMaterial ~= Enum.Material.Air
+        if grounded then
+            hum:ChangeState(Enum.HumanoidStateType.Jumping)
+        end
+    end
+end)
+
+-- ─── AIMBOT + SILENT AIM ────────────────────────────────────────────────────
 
 do
     local lockedPlayer  = nil
     local bindWasActive = false
 
-    -- FOV circle drawing
+    -- Exposed for silent aim hook
+    local cachedTargetPart = nil
+
     local fovCircle = Drawing.new("Circle")
-    fovCircle.Thickness  = 1
-    fovCircle.Color      = Color3.fromRGB(255, 255, 255)
-    fovCircle.Filled     = false
-    fovCircle.Visible    = false
-    fovCircle.NumSides   = 64
+    fovCircle.Thickness = 1
+    fovCircle.Color     = Color3.fromRGB(255, 255, 255)
+    fovCircle.Filled    = false
+    fovCircle.Visible   = false
+    fovCircle.NumSides  = 64
 
     local function playerIsValid(p)
         if not p or not p.Parent then return false end
         local char = p.Character
         if not char then return false end
         local hum = char:FindFirstChildOfClass("Humanoid")
+        return hum ~= nil and hum.Health > 0
+    end
+
+    -- isValidTarget takes a BasePart, checks its ancestor character
+    local function isValidTarget(part)
+        if not part or not part.Parent then return false end
+        local hum = part.Parent:FindFirstChildOfClass("Humanoid")
         return hum ~= nil and hum.Health > 0
     end
 
@@ -281,13 +302,6 @@ do
             or char:FindFirstChild("HumanoidRootPart")
     end
 
-    -- Returns mouse position in screen space
-    local function getMousePos()
-        local UIS = game:GetService("UserInputService")
-        local pos = UIS:GetMouseLocation()
-        return Vector2.new(pos.X, pos.Y)
-    end
-
     local function pickTarget(fov, mode)
         local mousePos = getMousePos()
         local best, bestVal = nil, math.huge
@@ -298,7 +312,6 @@ do
             if not part then continue end
             local sp, inView = Camera:WorldToViewportPoint(part.Position)
             if not inView or sp.Z <= 0 then continue end
-            -- distance from mouse, not screen center
             local d2 = (Vector2.new(sp.X, sp.Y) - mousePos).Magnitude
             if d2 > fov then continue end
             local val
@@ -306,12 +319,10 @@ do
                 val = p.Character:FindFirstChildOfClass("Humanoid").Health
             elseif mode == "Distance" then
                 val = (part.Position - Camera.CFrame.Position).Magnitude
-            else -- FOV
+            else
                 val = d2
             end
-            if val < bestVal then
-                best, bestVal = p, val
-            end
+            if val < bestVal then best, bestVal = p, val end
         end
         return best
     end
@@ -321,18 +332,15 @@ do
         if not part then return false end
         local sp, inView = Camera:WorldToViewportPoint(part.Position)
         if not inView or sp.Z <= 0 then return false end
-        local mousePos = getMousePos()
-        return (Vector2.new(sp.X, sp.Y) - mousePos).Magnitude <= fov
+        return (Vector2.new(sp.X, sp.Y) - getMousePos()).Magnitude <= fov
     end
 
     RunService:BindToRenderStep("publichook_aimbot", Enum.RenderPriority.Camera.Value + 1, function()
         local f = flags()
 
-        -- FOV circle — follows mouse, always drawn if toggle on
-        local showCircle = f.AimbotFOVCircle or false
-        if showCircle then
-            local circleColor = f.AimbotFOVCircleColor
-            fovCircle.Color    = circleColor and circleColor.Color or Color3.fromRGB(255, 255, 255)
+        if f.AimbotFOVCircle then
+            local cd = f.AimbotFOVCircleColor
+            fovCircle.Color    = cd and cd.Color or Color3.fromRGB(255,255,255)
             fovCircle.Radius   = f.AimbotFOVRadius or 120
             fovCircle.Position = getMousePos()
             fovCircle.Visible  = true
@@ -341,8 +349,8 @@ do
         end
 
         if not f.AimbotEnabled then
-            lockedPlayer  = nil
-            bindWasActive = false
+            lockedPlayer = nil bindWasActive = false
+            cachedTargetPart = nil
             return
         end
 
@@ -350,8 +358,8 @@ do
         local active = bind and bind.Active or false
 
         if not active then
-            lockedPlayer  = nil
-            bindWasActive = false
+            lockedPlayer = nil bindWasActive = false
+            cachedTargetPart = nil
             return
         end
 
@@ -361,26 +369,82 @@ do
         local alpha    = 1 - ((smooth - 1) / 99 * 0.95)
         local hardLock = f.AimbotHardLock or false
 
-        -- Fresh press → pick a new target
         if not bindWasActive then
             lockedPlayer  = pickTarget(fov, mode)
             bindWasActive = true
         end
 
-        -- Target died or left → always find a new one
         if not playerIsValid(lockedPlayer) then
             lockedPlayer = pickTarget(fov, mode)
         end
 
-        -- Soft lock: if target left FOV, drop them and find the closest in FOV
         if not hardLock and lockedPlayer and not isInFOV(lockedPlayer, fov) then
             lockedPlayer = pickTarget(fov, mode)
         end
 
         local part = getAimPart(lockedPlayer)
+        cachedTargetPart = part  -- always keep this up to date for silent aim
+
         if not part then return end
 
         local targetCF = CFrame.new(Camera.CFrame.Position, part.Position)
         Camera.CFrame  = Camera.CFrame:Lerp(targetCF, alpha)
     end)
+
+    -- ─── SILENT AIM HOOK ────────────────────────────────────────────────────
+    -- Hooks CameraController.GetTargeting so bullets redirect to the locked
+    -- target without moving the crosshair.
+
+    if not getgenv()._SilentAimHooked then
+        getgenv()._SilentAimHooked = true
+
+        local function hookTargetingSystem()
+            local ok, CameraController = pcall(function()
+                return require(game:GetService("ReplicatedStorage").Client.CameraController)
+            end)
+
+            if not ok or not CameraController or not CameraController.GetTargetingFn then
+                warn("[publichook] Silent Aim: CameraController not found or missing GetTargetingFn")
+                return
+            end
+
+            local originalGetTargetingFn = CameraController.GetTargetingFn
+            local originalGetTargeting   = originalGetTargetingFn()
+
+            if not hookfunction or not originalGetTargeting then
+                warn("[publichook] Silent Aim: hookfunction unavailable or GetTargeting is nil")
+                return
+            end
+
+            local original
+            original = hookfunction(originalGetTargeting, newcclosure(function(...)
+                local results = {original(...)}
+
+                -- Log structure once so we know which index is the target part
+                if not getgenv()._TargetingDebugLogged then
+                    getgenv()._TargetingDebugLogged = true
+                    print("=== GetTargeting() Return Values ===")
+                    for i, v in ipairs(results) do
+                        print(string.format("[%d] = %s (type: %s)", i, tostring(v), typeof(v)))
+                    end
+                    print("=====================================")
+                end
+
+                if flags().SilentAim and cachedTargetPart and isValidTarget(cachedTargetPart) then
+                    -- Replace index 2 (the target part) with our locked target.
+                    -- If the debug log shows a different index holds the BasePart,
+                    -- update this number accordingly.
+                    results[2] = cachedTargetPart
+                else
+                    cachedTargetPart = nil
+                end
+
+                return unpack(results)
+            end))
+
+            print("[publichook] Silent Aim: hook installed successfully")
+        end
+
+        task.delay(0.5, hookTargetingSystem)
+    end
 end

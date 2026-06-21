@@ -86,6 +86,61 @@ local Config = {
                                         Text = "When enabled, stays locked onto the target\neven if they leave your FOV circle.\nOnly unlocks if the target dies or leaves.",
                                         Width = 180
                                     }
+                                },
+                                {
+                                    Type = "Toggle",
+                                    Name = "Silent Aim",
+                                    Flag = "SilentAim",
+                                    Default = false,
+                                    Callback = function() end,
+                                    Tooltip = {
+                                        Title = "Silent Aim",
+                                        Text = "Hooks the game targeting system\nso bullets hit the locked target\nwithout moving your crosshair.",
+                                        Width = 180
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            Name = "Movement",
+                            Side = "Left",
+                            Elements = {
+                                {
+                                    Type = "Toggle",
+                                    Name = "Enabled",
+                                    Flag = "MovementEnabled",
+                                    Default = false,
+                                    Callback = function() end
+                                },
+                                {
+                                    Type = "Slider",
+                                    Name = "WalkSpeed",
+                                    Flag = "MovementWalkSpeed",
+                                    Min = 16,
+                                    Max = 150,
+                                    Decimal = 1,
+                                    Default = 50,
+                                    Suffix = " studs",
+                                    Callback = function() end
+                                },
+                                {
+                                    Type = "Toggle",
+                                    Name = "No Jump Cooldown",
+                                    Flag = "NoJumpCooldown",
+                                    Default = false,
+                                    Callback = function() end
+                                },
+                                {
+                                    Type = "Toggle",
+                                    Name = "Bhop",
+                                    Flag = "Bhop",
+                                    Default = false,
+                                    Callback = function() end,
+                                    Tooltip = {
+                                        Title = "Bhop",
+                                        Text = "Works best with\nNo Jump Cooldown enabled.",
+                                        Width = 160
+                                    }
                                 }
                             }
                         }
@@ -210,38 +265,6 @@ local Config = {
                                     Decimal = 50,
                                     Default = 2000,
                                     Suffix = " studs",
-                                    Callback = function() end
-                                }
-                            }
-                        },
-                        {
-                            Name = "Movement",
-                            Side = "Right",
-                            Elements = {
-                                {
-                                    Type = "Toggle",
-                                    Name = "Enabled",
-                                    Flag = "MovementEnabled",
-                                    Default = false,
-                                    Callback = function() end
-                                },
-                                {
-                                    Type = "Slider",
-                                    Name = "WalkSpeed",
-                                    Flag = "MovementWalkSpeed",
-                                    Min = 16,
-                                    Max = 150,
-                                    Decimal = 1,
-                                    Default = 50,
-                                    Suffix = " studs",
-                                    Callback = function() end
-                                },
-                                {
-                                    Type = "Dropdown",
-                                    Name = "Speed Mode",
-                                    Flag = "MovementWSMode",
-                                    Options = {"Humanoid", "Velocity"},
-                                    Default = "Humanoid",
                                     Callback = function() end
                                 }
                             }
