@@ -272,7 +272,26 @@ task.spawn(function()
                     hum.MoveDirection.Z * speed
                 )
             end
+        elseif mode == "Teleport" then
+            hum.WalkSpeed = 16 -- keep default so game doesn't flag us
         end
+    end
+end)
+
+-- Teleport mode (bypasses server speed checks)
+RunService.Heartbeat:Connect(function(dt)
+    local f = flags()
+    if not f.MovementEnabled then return end
+    local mode = f.MovementWSMode or "Humanoid"
+    if mode ~= "Teleport" then return end
+    local char = LocalPlayer.Character
+    local hum  = char and char:FindFirstChildOfClass("Humanoid")
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    if not hum or not root then return end
+    local speed = f.MovementWalkSpeed or 16
+    local move  = hum.MoveDirection
+    if move.Magnitude > 0 then
+        root.CFrame = root.CFrame + move.Unit * speed * dt
     end
 end)
 

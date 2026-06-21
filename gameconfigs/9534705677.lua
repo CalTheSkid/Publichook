@@ -182,10 +182,18 @@ local Config = {
                                     Name = "WalkSpeed",
                                     Flag = "MovementWalkSpeed",
                                     Min = 16,
-                                    Max = 150,
+                                    Max = 500,
                                     Decimal = 1,
                                     Default = 50,
                                     Suffix = " studs",
+                                    Callback = function() end
+                                },
+                                {
+                                    Type = "Dropdown",
+                                    Name = "Speed Mode",
+                                    Flag = "MovementWSMode",
+                                    Options = {"Velocity", "Teleport"},
+                                    Default = "Teleport",
                                     Callback = function() end
                                 },
                                 {
