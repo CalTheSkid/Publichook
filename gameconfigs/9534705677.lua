@@ -98,12 +98,7 @@ local Config = {
                                     Name = "Enabled",
                                     Flag = "SilentAim",
                                     Default = false,
-                                    Callback = function() end,
-                                    Tooltip = {
-                                        Title = "Silent Aim",
-                                        Text = "Hooks the game targeting system\nso bullets hit the closest target\nwithout moving your crosshair.",
-                                        Width = 180
-                                    }
+                                    Callback = function() end
                                 },
                                 {
                                     Type = "Slider",

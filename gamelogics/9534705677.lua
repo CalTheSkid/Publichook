@@ -450,8 +450,23 @@ do
         local fov  = f.SilentAimFOV or 200
         local mode = f.SilentAimTargetMode or "FOV"
 
-        -- Re-pick if current target is dead/gone, otherwise keep lock
+        -- Clear if dead/gone
         if not isValidPart(cachedSilentTarget) then
+            cachedSilentTarget = nil
+        end
+
+        -- Clear if target has left the FOV circle
+        if cachedSilentTarget then
+            local sp, inView = Camera:WorldToViewportPoint(cachedSilentTarget.Position)
+            if not inView or sp.Z <= 0 then
+                cachedSilentTarget = nil
+            elseif (Vector2.new(sp.X, sp.Y) - getMousePos()).Magnitude > fov then
+                cachedSilentTarget = nil
+            end
+        end
+
+        -- Pick new target if we don't have one
+        if not cachedSilentTarget then
             cachedSilentTarget = pickSilentTarget(fov, mode)
         end
     end)
