@@ -93,14 +93,12 @@ local function buildUI(config)
     WindowObj.ChangeMenuTitle(coloredTitle)
 
     local PanelObj = WindowObj:Panel({
-        Name = gameName,
+        Name = "publichook",
         Size = windowSize
     })
 
-    if PanelObj.Items and PanelObj.Items.Title then
-        PanelObj.Items.Title.RichText = true
-        PanelObj.Items.Title.Text = string.format('publichook <font color="#00E676">| %s</font>', gameName)
-    end
+    PanelObj.Items.Title.RichText = true
+    PanelObj.ChangeName(string.format('publichook <font color="#00E676">| %s</font>', gameName))
 
     if config.Tabs then
         for _, tabData in ipairs(config.Tabs) do
