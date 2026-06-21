@@ -299,42 +299,18 @@ end)
 
 -- ─── AIMBOT ─────────────────────────────────────────────────────────────────
 
-task.spawn(function()
-    local UserInputService = game:GetService("UserInputService")
+do
+    local aimbotConnection = nil
 
-    while task.wait() do
-        local f = flags()
-
-        -- Restore camera when aimbot disabled
-        if not f.AimbotEnabled then
-            if Camera.CameraType == Enum.CameraType.Scriptable then
-                Camera.CameraType = Enum.CameraType.Custom
-            end
-            continue
+    local function stopAimbot()
+        if aimbotConnection then
+            aimbotConnection:Disconnect()
+            aimbotConnection = nil
         end
+    end
 
-        local bind = f.AimbotBind
-        local active = bind and bind.Active or false
-
-        if not active then
-            if Camera.CameraType == Enum.CameraType.Scriptable then
-                Camera.CameraType = Enum.CameraType.Custom
-            end
-            continue
-        end
-
-        -- Set scriptable so we can control the camera
-        if Camera.CameraType ~= Enum.CameraType.Scriptable then
-            Camera.CameraType = Enum.CameraType.Scriptable
-        end
-
-        local fov      = f.AimbotFOVRadius or 120
-        local mode     = f.AimbotTargetMode or "Distance"
-        local smooth   = f.AimbotSmooth or 20
-        -- smooth 1 = instant, smooth 100 = very slow. Convert to lerp alpha.
-        local alpha    = 1 - ((smooth - 1) / 99 * 0.95) -- range 0.05 .. 1.0
-        local center   = Camera.ViewportSize / 2
-
+    local function getBestTarget(fov, mode)
+        local center = Camera.ViewportSize / 2
         local bestPart, bestVal = nil, math.huge
 
         for _, p in ipairs(Players:GetPlayers()) do
@@ -348,7 +324,9 @@ task.spawn(function()
             local aimPart = head or root
             if not aimPart then continue end
 
-            local sp = Camera:WorldToViewportPoint(aimPart.Position)
+            local sp, inView = Camera:WorldToViewportPoint(aimPart.Position)
+            if not inView or sp.Z <= 0 then continue end
+
             local d2 = (Vector2.new(sp.X, sp.Y) - center).Magnitude
             if d2 > fov then continue end
 
@@ -366,9 +344,25 @@ task.spawn(function()
             end
         end
 
-        if bestPart then
-            local targetCF = CFrame.new(Camera.CFrame.Position, bestPart.Position)
-            Camera.CFrame = Camera.CFrame:Lerp(targetCF, alpha)
-        end
+        return bestPart
     end
-end)
+
+    RunService:BindToRenderStep("publichook_aimbot", Enum.RenderPriority.Camera.Value + 1, function()
+        local f = flags()
+        if not f.AimbotEnabled then return end
+
+        local bind = f.AimbotBind
+        if not (bind and bind.Active) then return end
+
+        local fov    = f.AimbotFOVRadius or 120
+        local mode   = f.AimbotTargetMode or "Distance"
+        local smooth = f.AimbotSmooth or 20
+        local alpha  = 1 - ((smooth - 1) / 99 * 0.95)
+
+        local target = getBestTarget(fov, mode)
+        if not target then return end
+
+        local targetCF = CFrame.new(Camera.CFrame.Position, target.Position)
+        Camera.CFrame = Camera.CFrame:Lerp(targetCF, alpha)
+    end)
+end
