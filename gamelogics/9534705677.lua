@@ -279,6 +279,16 @@ task.spawn(function()
 end)
 
 -- Teleport mode (bypasses server speed checks)
+local bodyVel
+local function ensureBodyVel(root)
+    if not bodyVel or bodyVel.Parent ~= root then
+        bodyVel = Instance.new("BodyVelocity")
+        bodyVel.MaxForce = Vector3.new(9e9, 0, 9e9) -- horizontal only
+        bodyVel.P = 10000
+        bodyVel.Parent = root
+    end
+end
+
 RunService.Heartbeat:Connect(function(dt)
     local f = flags()
     if not f.MovementEnabled then return end
@@ -292,8 +302,13 @@ RunService.Heartbeat:Connect(function(dt)
 
     local speed = f.MovementWalkSpeed or 50
     local move  = hum.MoveDirection
+
     if move.Magnitude > 0 then
-        root.CFrame = root.CFrame + move.Unit * speed * dt
+        ensureBodyVel(root)
+        bodyVel.Velocity = move.Unit * speed
+        hum.WalkSpeed = 16
+    elseif bodyVel and bodyVel.Parent then
+        bodyVel:Destroy()
     end
 end)
 
