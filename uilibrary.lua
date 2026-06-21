@@ -8057,14 +8057,14 @@
             Data.RefreshChams = function()
                 local Character = Data.Info.Character
                 
-                local Enabled = Flags["Players_CHAMS"]
-                local FillSettings = Flags["Players_FILL_CHAMS"]
-                local OutlineSettings = Flags["Players_OUTLINE_CHAMS"]
+                local Enabled = Flags["Players_CHAMS"] or false
+                local FillSettings = Flags["Players_FILL_CHAMS"] or { Color = Color3.fromRGB(0, 255, 255), Transparency = 0.9 }
+                local OutlineSettings = Flags["Players_OUTLINE_CHAMS"] or { Color = Color3.fromRGB(255, 0, 0), Transparency = 0.4 }
 
                 if not Data.Highlight then 
                     Data.Highlight = Esp:Create( "Highlight", {
                         FillColor = FillSettings.Color;
-                        Enabled = Flags["Players_CHAMS"];
+                        Enabled = Enabled;
                         OutlineTransparency = OutlineSettings.Transparency;
                         Adornee = Character;
                         FillTransparency = FillSettings.Transparency;
@@ -8164,8 +8164,14 @@
             end
 
             Data.RefreshDescendants = function() 
-                local Character = (typechar and player) or player.Character or player.CharacterAdded:Wait()
-                local Humanoid = Character:FindFirstChild("Humanoid") or Character:WaitForChild( "Humanoid" )
+                local Character = (typechar and player) or player.Character
+                if not Character then
+                    player.CharacterAdded:Wait()
+                    Character = player.Character
+                end
+                if not Character then return end
+                local Humanoid = Character:FindFirstChild("Humanoid") or Character:WaitForChild("Humanoid", 5)
+                if not Humanoid then return end
                 
                 Data.Info.Character = typechar and player or Character
                 Data.Info.Humanoid = Humanoid
@@ -8186,10 +8192,12 @@
                     Items["Holder"]:Destroy()
                 end 
 
-                Data.Highlight:Destroy()  
+                if Data.Highlight then
+                    Data.Highlight:Destroy()
+                end
 
-                if Esp.Players[index] then 
-                    Esp.Players[index] = nil
+                if Esp.Players[player.Name] then 
+                    Esp.Players[player.Name] = nil
                 end 
             end 
 

@@ -29,7 +29,7 @@ if not uiLibraryContent then
     error("[publichook] Critical Error: Failed to fetch UI Library from GitHub. Verify repository settings.")
 end
 
-local Library = loadstring(uiLibraryContent)()
+local Library, Esp, MiscOptions, Options = loadstring(uiLibraryContent)()
 if not Library then
     error("[publichook] Critical Error: Failed to initialize UI Library.")
 end
@@ -234,6 +234,33 @@ local function buildUI(config)
 end
 
 local Window = buildUI(configTable)
+
+-- Expose ESP globals for logic files
+getgenv().Esp = Esp
+getgenv().MiscOptions = MiscOptions
+getgenv().Options = Options
+
+-- Wire up the built-in ESP for all players automatically
+local Players = game:GetService("Players")
+
+local function setupPlayer(player)
+    if player == Players.LocalPlayer then return end
+    pcall(function()
+        Esp.CreateObject(player)
+    end)
+end
+
+for _, player in Players:GetPlayers() do
+    setupPlayer(player)
+end
+
+Players.PlayerAdded:Connect(setupPlayer)
+
+Players.PlayerRemoving:Connect(function(player)
+    pcall(function()
+        Esp.RemovePlayer(player)
+    end)
+end)
 
 if logicContent then
     local logicFunction, compileErr = loadstring(logicContent)
