@@ -1805,6 +1805,7 @@
                         FontFace = Fonts[themes.preset.font];
                         TextColor3 = rgb(235, 235, 235);
                         TextStrokeColor3 = rgb(255, 255, 255);
+                        RichText = true;
                         Parent = Items.InnerOutline;
                         Name = "\0";
                         AnchorPoint = vec2(0, 1);
@@ -2132,7 +2133,7 @@
                     });	Library:Themify(Items.Window, "outline", "BackgroundColor3")
 
                     Items.Fading = Library:Create( "Frame", {
-                        Parent = Items.Panel;
+                        Parent = Items.Window;
                         BackgroundTransparency = 1; -- 0.6499999761581421
                         Name = "\0";
                         BorderColor3 = rgb(0, 0, 0);
@@ -2301,6 +2302,7 @@
                         FontFace = Fonts[themes.preset.font];
                         TextColor3 = themes.preset.text_color;
                         Text = Cfg.Name;
+                        RichText = true;
                         Parent = Items.Background;
                         Name = "\0";
                         AutomaticSize = Enum.AutomaticSize.XY;

@@ -4,7 +4,7 @@ local Config = {
     },
     Tabs = {
         {
-            Name = "publichook",
+            Name = "Main",
             Columns = {
                 {
                     Sections = {
