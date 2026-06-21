@@ -9,12 +9,12 @@ print("[publichook] Universal logic loaded.")
 
 local espObjects = {} -- [player] = { box, nameTag, distTag, healthBg, healthBar, highlight }
 
-local function getFlags()
-    return flags()
+local function flags()
+    return getgenv().flags and getgenv().flags() or {}
 end
 
 local function getColor(flag, default)
-    local f = getFlags()[flag]
+    local f = flags()[flag]
     if f and f.Color then return f.Color end
     return default or Color3.fromRGB(255, 255, 255)
 end
@@ -148,7 +148,7 @@ Players.PlayerRemoving:Connect(removeEspFor)
 
 -- main render loop
 RunService.RenderStepped:Connect(function()
-    local f = getFlags()
+    local f = flags()
     local espOn     = f.ESPEnabled or false
     local showBox   = f.ESPBoxes or false
     local showName  = f.ESPName or false
