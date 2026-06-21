@@ -279,13 +279,6 @@ task.spawn(function()
         local root = char and char:FindFirstChild("HumanoidRootPart")
         if not hum or not root then continue end
 
-        -- Don't jump if there's a ceiling within 10 studs above the head
-        local head = char:FindFirstChild("Head") or root
-        if head then
-            local raycast = workspace:Raycast(head.Position, Vector3.new(0, 10, 0))
-            if raycast then continue end
-        end
-
         local grounded = hum.FloorMaterial ~= Enum.Material.Air
         if grounded then
             hum:ChangeState(Enum.HumanoidStateType.Jumping)

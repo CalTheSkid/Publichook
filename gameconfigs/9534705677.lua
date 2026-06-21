@@ -205,6 +205,11 @@ local Config = {
                                         Title = "Bhop",
                                         Text = "Works best with\nNo Jump Cooldown enabled.",
                                         Width = 160
+                                    },
+                                    Keybind = {
+                                        Name = "Bhop Bind",
+                                        Flag = "BhopBind",
+                                        Mode = "Toggle"
                                     }
                                 }
                             }
