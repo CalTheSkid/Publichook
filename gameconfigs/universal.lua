@@ -50,8 +50,8 @@ local Config = {
                                     Type = "Dropdown",
                                     Name = "Target Mode",
                                     Flag = "AimbotTargetMode",
-                                    Options = {"Distance", "FOV", "Health"},
-                                    Default = "Distance",
+                                    Options = {"FOV", "Distance", "Health"},
+                                    Default = "FOV",
                                     Callback = function() end
                                 }
                             }
@@ -106,7 +106,7 @@ local Config = {
                                     Colorpicker = {
                                         Name = "Distance Color",
                                         Flag = "ESPDistanceColor",
-                                        Color = Color3.fromRGB(255, 255, 255),
+                                        Color = Color3.fromRGB(200, 200, 200),
                                         Transparency = 0
                                     }
                                 },
@@ -115,6 +115,32 @@ local Config = {
                                     Name = "Health Bar",
                                     Flag = "ESPHealthBar",
                                     Default = false,
+                                    Callback = function() end,
+                                    Colorpicker = {
+                                        Name = "High HP Color",
+                                        Flag = "ESPHealthHighColor",
+                                        Color = Color3.fromRGB(0, 255, 0),
+                                        Transparency = 0
+                                    }
+                                },
+                                {
+                                    Type = "Label",
+                                    Name = "Health Bar Colors"
+                                },
+                                {
+                                    Type = "Colorpicker",
+                                    Name = "Low HP Color",
+                                    Flag = "ESPHealthLowColor",
+                                    Color = Color3.fromRGB(255, 0, 0),
+                                    Transparency = 0,
+                                    Callback = function() end
+                                },
+                                {
+                                    Type = "Colorpicker",
+                                    Name = "HP Background",
+                                    Flag = "ESPHealthBgColor",
+                                    Color = Color3.fromRGB(0, 0, 0),
+                                    Transparency = 0,
                                     Callback = function() end
                                 },
                                 {
@@ -124,11 +150,23 @@ local Config = {
                                     Default = false,
                                     Callback = function() end,
                                     Colorpicker = {
-                                        Name = "Chams Color",
+                                        Name = "Chams Fill",
                                         Flag = "ESPChamsColor",
                                         Color = Color3.fromRGB(255, 0, 0),
                                         Transparency = 0.5
                                     }
+                                },
+                                {
+                                    Type = "Label",
+                                    Name = "Chams Outline"
+                                },
+                                {
+                                    Type = "Colorpicker",
+                                    Name = "Chams Outline Color",
+                                    Flag = "ESPChamsOutlineColor",
+                                    Color = Color3.fromRGB(255, 255, 255),
+                                    Transparency = 0,
+                                    Callback = function() end
                                 },
                                 {
                                     Type = "Slider",
@@ -161,7 +199,7 @@ local Config = {
                                     Min = 16,
                                     Max = 150,
                                     Decimal = 1,
-                                    Default = 16,
+                                    Default = 50,
                                     Suffix = " studs",
                                     Callback = function() end
                                 },
@@ -193,7 +231,7 @@ local Config = {
                                     Name = "Rejoin",
                                     Callback = function()
                                         local TP = game:GetService("TeleportService")
-                                        local P = game:GetService("Players")
+                                        local P  = game:GetService("Players")
                                         TP:TeleportToPlaceInstance(game.PlaceId, game.JobId, P.LocalPlayer)
                                     end
                                 },
