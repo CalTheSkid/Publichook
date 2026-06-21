@@ -270,21 +270,28 @@ task.spawn(function()
         local hum = char and char:FindFirstChildOfClass("Humanoid")
         if not hum then continue end
 
-        local speed = flags().MovementWalkSpeed or 16
-        local mode  = flags().MovementWSMode or "Humanoid"
+        local f = flags()
+        if not f.MovementEnabled then
+            -- restore default if toggle was just turned off
+            if hum.WalkSpeed ~= 16 then
+                hum.WalkSpeed = 16
+            end
+            continue
+        end
 
-        if speed > 16 then
-            if mode == "Humanoid" then
-                hum.WalkSpeed = speed
-            elseif mode == "Velocity" then
-                local root = char:FindFirstChild("HumanoidRootPart")
-                if root and hum.MoveDirection.Magnitude > 0 then
-                    root.AssemblyLinearVelocity = Vector3.new(
-                        hum.MoveDirection.X * speed,
-                        root.AssemblyLinearVelocity.Y,
-                        hum.MoveDirection.Z * speed
-                    )
-                end
+        local speed = f.MovementWalkSpeed or 16
+        local mode  = f.MovementWSMode or "Humanoid"
+
+        if mode == "Humanoid" then
+            hum.WalkSpeed = speed
+        elseif mode == "Velocity" then
+            local root = char:FindFirstChild("HumanoidRootPart")
+            if root and hum.MoveDirection.Magnitude > 0 then
+                root.AssemblyLinearVelocity = Vector3.new(
+                    hum.MoveDirection.X * speed,
+                    root.AssemblyLinearVelocity.Y,
+                    hum.MoveDirection.Z * speed
+                )
             end
         end
     end
@@ -293,18 +300,42 @@ end)
 -- ─── AIMBOT ─────────────────────────────────────────────────────────────────
 
 task.spawn(function()
+    local UserInputService = game:GetService("UserInputService")
+
     while task.wait() do
         local f = flags()
-        if not (f.AimbotEnabled) then continue end
+
+        -- Restore camera when aimbot disabled
+        if not f.AimbotEnabled then
+            if Camera.CameraType == Enum.CameraType.Scriptable then
+                Camera.CameraType = Enum.CameraType.Custom
+            end
+            continue
+        end
+
         local bind = f.AimbotBind
-        print(bind)
-        if not (bind and bind.Active) then continue end
+        local active = bind and bind.Active or false
 
-        local fov    = f.AimbotFOVRadius or 120
-        local mode   = f.AimbotTargetMode or "Distance"
-        local center = Camera.ViewportSize / 2
+        if not active then
+            if Camera.CameraType == Enum.CameraType.Scriptable then
+                Camera.CameraType = Enum.CameraType.Custom
+            end
+            continue
+        end
 
-        local best, bestVal = nil, math.huge
+        -- Set scriptable so we can control the camera
+        if Camera.CameraType ~= Enum.CameraType.Scriptable then
+            Camera.CameraType = Enum.CameraType.Scriptable
+        end
+
+        local fov      = f.AimbotFOVRadius or 120
+        local mode     = f.AimbotTargetMode or "Distance"
+        local smooth   = f.AimbotSmooth or 20
+        -- smooth 1 = instant, smooth 100 = very slow. Convert to lerp alpha.
+        local alpha    = 1 - ((smooth - 1) / 99 * 0.95) -- range 0.05 .. 1.0
+        local center   = Camera.ViewportSize / 2
+
+        local bestPart, bestVal = nil, math.huge
 
         for _, p in ipairs(Players:GetPlayers()) do
             if p == LocalPlayer then continue end
@@ -312,13 +343,12 @@ task.spawn(function()
             if not char then continue end
             local hum = char:FindFirstChildOfClass("Humanoid")
             if not hum or hum.Health <= 0 then continue end
-            local root = char:FindFirstChild("HumanoidRootPart")
             local head = char:FindFirstChild("Head")
-            if not root then continue end
+            local root = char:FindFirstChild("HumanoidRootPart")
+            local aimPart = head or root
+            if not aimPart then continue end
 
-            local sp, inView = Camera:WorldToViewportPoint((head or root).Position)
-            if not inView then continue end
-
+            local sp = Camera:WorldToViewportPoint(aimPart.Position)
             local d2 = (Vector2.new(sp.X, sp.Y) - center).Magnitude
             if d2 > fov then continue end
 
@@ -328,16 +358,17 @@ task.spawn(function()
             elseif mode == "Health" then
                 val = hum.Health
             else
-                val = (root.Position - Camera.CFrame.Position).Magnitude
+                val = (aimPart.Position - Camera.CFrame.Position).Magnitude
             end
 
             if val < bestVal then
-                best, bestVal = (head or root), val
+                bestPart, bestVal = aimPart, val
             end
         end
 
-        if best then
-            Camera.CFrame = CFrame.new(Camera.CFrame.Position, best.Position)
+        if bestPart then
+            local targetCF = CFrame.new(Camera.CFrame.Position, bestPart.Position)
+            Camera.CFrame = Camera.CFrame:Lerp(targetCF, alpha)
         end
     end
 end)

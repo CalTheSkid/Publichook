@@ -37,6 +37,16 @@ local Config = {
                                     Callback = function() end
                                 },
                                 {
+                                    Type = "Slider",
+                                    Name = "Smoothness",
+                                    Flag = "AimbotSmooth",
+                                    Min = 1,
+                                    Max = 100,
+                                    Decimal = 1,
+                                    Default = 20,
+                                    Callback = function() end
+                                },
+                                {
                                     Type = "Dropdown",
                                     Name = "Target Mode",
                                     Flag = "AimbotTargetMode",
@@ -137,6 +147,13 @@ local Config = {
                             Name = "Movement",
                             Side = "Right",
                             Elements = {
+                                {
+                                    Type = "Toggle",
+                                    Name = "Enabled",
+                                    Flag = "MovementEnabled",
+                                    Default = false,
+                                    Callback = function() end
+                                },
                                 {
                                     Type = "Slider",
                                     Name = "WalkSpeed",
