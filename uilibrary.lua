@@ -1152,7 +1152,6 @@
 
             if ins.ClassName == "TextLabel" or ins.ClassName == "TextBox" then 
                 Library:Themify(ins, "text_color", "TextColor3")
-                Library:Themify(ins, "unselected", "TextColor3")
             end 
 
             return ins 
