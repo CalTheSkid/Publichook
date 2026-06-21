@@ -28,6 +28,7 @@ end
 -- Returns true if player should be targeted/shown
 -- Respects TeamCheck and AliveCheck flags globally
 local function isEnemy(player)
+    if not player or not player.Parent then return false end
     if player == LocalPlayer then return false end
     local f = flags()
 
