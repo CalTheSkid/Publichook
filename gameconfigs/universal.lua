@@ -22,7 +22,7 @@ local Config = {
                                         Name = "Aimbot Bind",
                                         Flag = "AimbotBind",
                                         Key = Enum.KeyCode.F,
-                                        Mode = "Hold"
+                                        Mode = "Toggle"
                                     }
                                 },
                                 {

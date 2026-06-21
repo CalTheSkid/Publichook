@@ -234,7 +234,6 @@ local function buildUI(config)
 end
 
 local Window = buildUI(configTable)
-print("a")
 if logicContent then
     print("[publichook] Executing gameplay logic for Game ID: " .. gameId)
     local logicFunction, compileErr = loadstring(logicContent)

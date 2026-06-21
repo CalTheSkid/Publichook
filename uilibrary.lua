@@ -4930,7 +4930,6 @@
                     Library.DraggingSpeed = num
                 end})
                 Section:Label({Name = "Menu Bind"}):Keybind({Name = "Menu Bind", Key = Enum.KeyCode.E, Callback = function(bool) 
-                    print(bool)
                     Window.SetVisible(bool) 
                 end})
                 Window.Tweening = false
