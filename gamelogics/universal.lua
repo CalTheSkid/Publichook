@@ -9,9 +9,8 @@ print("[publichook] Universal logic loaded.")
 
 local espObjects = {} -- [player] = { box, nameTag, distTag, healthBg, healthBar, highlight }
 
-local function flags()
-    return getgenv().flags and getgenv().flags() or {}
-end
+-- flags() is injected by the loader directly into this environment.
+-- It returns Library.Flags — the live flag table from the UI.
 
 local function getColor(flag, default)
     local f = flags()[flag]
@@ -198,7 +197,7 @@ RunService.RenderStepped:Connect(function()
             continue
         end
 
-        -- Box
+        -- Boxwell
         if showBox then
             local lines = obj.boxLines
             local tl, tr, bl, br = bb.tl, bb.tr, bb.bl, bb.br
