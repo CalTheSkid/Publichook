@@ -364,8 +364,22 @@ do
             lockedPlayer = nil bindWasActive = false return
         end
 
-        local bind   = f.AimbotBind
-        local active = bind and bind.Active or false
+        local bind = f.AimbotBind
+        -- Check key state directly so game_event doesn't block us
+        local active = false
+        if bind and bind.Key and bind.Key ~= "NONE" then
+            local mode = bind.Mode or "Toggle"
+            if mode == "Hold" then
+                -- Always check physical key state for Hold
+                local ok, held = pcall(function()
+                    return UIS:IsKeyDown(bind.Key)
+                end)
+                active = ok and held or false
+            else
+                -- Toggle/Always: use the flag's Active value
+                active = bind.Active or false
+            end
+        end
         if not active then
             lockedPlayer = nil bindWasActive = false return
         end

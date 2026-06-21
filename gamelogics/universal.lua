@@ -1,5 +1,6 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local UIS = game:GetService("UserInputService")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
@@ -362,8 +363,20 @@ do
             return
         end
 
-        local bind   = f.AimbotBind
-        local active = bind and bind.Active or false
+        local bind = f.AimbotBind
+        -- Check key state directly so game_event doesn't block Hold mode
+        local active = false
+        if bind and bind.Key and bind.Key ~= "NONE" then
+            local mode = bind.Mode or "Toggle"
+            if mode == "Hold" then
+                local ok, held = pcall(function()
+                    return UIS:IsKeyDown(bind.Key)
+                end)
+                active = ok and held or false
+            else
+                active = bind.Active or false
+            end
+        end
 
         if not active then
             lockedPlayer  = nil
