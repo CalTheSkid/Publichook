@@ -53,6 +53,31 @@ local Config = {
                                     Options = {"FOV", "Distance", "Health"},
                                     Default = "FOV",
                                     Callback = function() end
+                                },
+                                {
+                                    Type = "Toggle",
+                                    Name = "Show FOV Circle",
+                                    Flag = "AimbotFOVCircle",
+                                    Default = false,
+                                    Callback = function() end,
+                                    Colorpicker = {
+                                        Name = "FOV Circle Color",
+                                        Flag = "AimbotFOVCircleColor",
+                                        Color = Color3.fromRGB(255, 255, 255),
+                                        Transparency = 0
+                                    }
+                                },
+                                {
+                                    Type = "Toggle",
+                                    Name = "Hard Lock",
+                                    Flag = "AimbotHardLock",
+                                    Default = false,
+                                    Callback = function() end,
+                                    Tooltip = {
+                                        Title = "Hard Lock",
+                                        Text = "When enabled, stays locked onto the target\neven if they leave your FOV circle.\nOnly unlocks if the target dies or leaves.",
+                                        Width = 180
+                                    }
                                 }
                             }
                         }

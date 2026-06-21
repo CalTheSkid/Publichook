@@ -253,10 +253,16 @@ end)
 -- ─── AIMBOT ─────────────────────────────────────────────────────────────────
 
 do
-    -- Store the locked Player object — not a part.
-    -- We only replace it when the player dies or leaves.
-    local lockedPlayer   = nil
-    local bindWasActive  = false
+    local lockedPlayer  = nil
+    local bindWasActive = false
+
+    -- FOV circle drawing
+    local fovCircle = Drawing.new("Circle")
+    fovCircle.Thickness  = 1
+    fovCircle.Color      = Color3.fromRGB(255, 255, 255)
+    fovCircle.Filled     = false
+    fovCircle.Visible    = false
+    fovCircle.NumSides   = 64
 
     local function playerIsValid(p)
         if not p or not p.Parent then return false end
@@ -272,8 +278,15 @@ do
         return char:FindFirstChild("Head") or char:FindFirstChild("HumanoidRootPart")
     end
 
+    -- Returns mouse position in screen space
+    local function getMousePos()
+        local UIS = game:GetService("UserInputService")
+        local pos = UIS:GetMouseLocation()
+        return Vector2.new(pos.X, pos.Y)
+    end
+
     local function pickTarget(fov, mode)
-        local center = Camera.ViewportSize / 2
+        local mousePos = getMousePos()
         local best, bestVal = nil, math.huge
         for _, p in ipairs(Players:GetPlayers()) do
             if p == LocalPlayer then continue end
@@ -282,7 +295,8 @@ do
             if not part then continue end
             local sp, inView = Camera:WorldToViewportPoint(part.Position)
             if not inView or sp.Z <= 0 then continue end
-            local d2 = (Vector2.new(sp.X, sp.Y) - center).Magnitude
+            -- distance from mouse, not screen center
+            local d2 = (Vector2.new(sp.X, sp.Y) - mousePos).Magnitude
             if d2 > fov then continue end
             local val
             if mode == "Health" then
@@ -299,8 +313,30 @@ do
         return best
     end
 
+    local function isInFOV(p, fov)
+        local part = getAimPart(p)
+        if not part then return false end
+        local sp, inView = Camera:WorldToViewportPoint(part.Position)
+        if not inView or sp.Z <= 0 then return false end
+        local mousePos = getMousePos()
+        return (Vector2.new(sp.X, sp.Y) - mousePos).Magnitude <= fov
+    end
+
     RunService:BindToRenderStep("publichook_aimbot", Enum.RenderPriority.Camera.Value + 1, function()
         local f = flags()
+
+        -- FOV circle — follows mouse, always drawn if toggle on
+        local showCircle = f.AimbotFOVCircle or false
+        if showCircle then
+            local circleColor = f.AimbotFOVCircleColor
+            fovCircle.Color    = circleColor and circleColor.Color or Color3.fromRGB(255, 255, 255)
+            fovCircle.Radius   = f.AimbotFOVRadius or 120
+            fovCircle.Position = getMousePos()
+            fovCircle.Visible  = true
+        else
+            fovCircle.Visible = false
+        end
+
         if not f.AimbotEnabled then
             lockedPlayer  = nil
             bindWasActive = false
@@ -316,20 +352,25 @@ do
             return
         end
 
-        local fov    = f.AimbotFOVRadius or 120
-        local mode   = f.AimbotTargetMode or "FOV"
-        local smooth = f.AimbotSmooth or 20
-        local alpha  = 1 - ((smooth - 1) / 99 * 0.95)
+        local fov      = f.AimbotFOVRadius or 120
+        local mode     = f.AimbotTargetMode or "FOV"
+        local smooth   = f.AimbotSmooth or 20
+        local alpha    = 1 - ((smooth - 1) / 99 * 0.95)
+        local hardLock = f.AimbotHardLock or false
 
-        -- Fresh press → pick a target and lock onto it
+        -- Fresh press → pick a new target
         if not bindWasActive then
             lockedPlayer  = pickTarget(fov, mode)
             bindWasActive = true
         end
 
-        -- Locked player died/left → find next, but DO NOT re-evaluate just
-        -- because someone else walked into FOV
+        -- Target died or left → always find a new one
         if not playerIsValid(lockedPlayer) then
+            lockedPlayer = pickTarget(fov, mode)
+        end
+
+        -- Soft lock: if target left FOV, drop them and find the closest in FOV
+        if not hardLock and lockedPlayer and not isInFOV(lockedPlayer, fov) then
             lockedPlayer = pickTarget(fov, mode)
         end
 
