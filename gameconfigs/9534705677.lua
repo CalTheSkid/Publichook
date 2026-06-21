@@ -211,6 +211,30 @@ local Config = {
                                         Flag = "BhopBind",
                                         Mode = "Toggle"
                                     }
+                                },
+                                {
+                                    Type = "Toggle",
+                                    Name = "No Recoil",
+                                    Flag = "NoRecoil",
+                                    Default = false,
+                                    Callback = function() end,
+                                    Tooltip = {
+                                        Title = "No Recoil",
+                                        Text = "!! CANT BE DISABLED, MUST REJOIN TO DISABLED !!",
+                                        Width = 220
+                                    }
+                                },
+                                {
+                                    Type = "Toggle",
+                                    Name = "No Spread",
+                                    Flag = "NoSpread",
+                                    Default = false,
+                                    Callback = function() end,
+                                    Tooltip = {
+                                        Title = "No Spread",
+                                        Text = "!! CANT BE DISABLED, MUST REJOIN TO DISABLED !!",
+                                        Width = 220
+                                    }
                                 }
                             }
                         }

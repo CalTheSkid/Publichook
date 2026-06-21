@@ -286,6 +286,40 @@ task.spawn(function()
     end
 end)
 
+-- ─── NO RECOIL ───────────────────────────────────────────────────────────────
+
+task.spawn(function()
+    while task.wait() do
+        local f = flags()
+        if f and f.NoRecoil then
+            local RecoilConnection = filtergc("function", { Constants = { Enum.EasingDirection.Out, Enum.EasingDirection.InOut, "fromOrientation" } }, true)
+            if RecoilConnection then
+                hookfunction(RecoilConnection, function() return end)
+            end
+            break
+        end
+    end
+end)
+
+-- ─── NO SPREAD ───────────────────────────────────────────────────────────────
+
+task.spawn(function()
+    while task.wait() do
+        local f = flags()
+        if f and f.NoSpread then
+            local ReplicatedStorage = game:GetService("ReplicatedStorage")
+            local bulletModule = ReplicatedStorage and require(ReplicatedStorage.Common.CombatService.Components.Bullet)
+            local fn = bulletModule and bulletModule.GetSpreadedDirection
+            if fn then
+                hookfunction(fn, function(self, direction)
+                    return direction
+                end)
+            end
+            break
+        end
+    end
+end)
+
 -- ─── AIMBOT ─────────────────────────────────────────────────────────────────
 
 do
