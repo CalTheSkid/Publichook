@@ -7413,8 +7413,6 @@
     }; do 
         Esp.ScreenGui.IgnoreGuiInset = true
         Esp.ScreenGui.Name = "EspObject"
-        Esp.ScreenGui.DisplayOrder = 99
-        Esp.ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
         Esp.Cache.Enabled = false   
 
@@ -8059,14 +8057,14 @@
             Data.RefreshChams = function()
                 local Character = Data.Info.Character
                 
-                local Enabled = Flags["Players_CHAMS"] or false
-                local FillSettings = Flags["Players_FILL_CHAMS"] or { Color = Color3.fromRGB(0, 255, 255), Transparency = 0.9 }
-                local OutlineSettings = Flags["Players_OUTLINE_CHAMS"] or { Color = Color3.fromRGB(255, 0, 0), Transparency = 0.4 }
+                local Enabled = Flags["Players_CHAMS"]
+                local FillSettings = Flags["Players_FILL_CHAMS"]
+                local OutlineSettings = Flags["Players_OUTLINE_CHAMS"]
 
                 if not Data.Highlight then 
                     Data.Highlight = Esp:Create( "Highlight", {
                         FillColor = FillSettings.Color;
-                        Enabled = Enabled;
+                        Enabled = Flags["Players_CHAMS"];
                         OutlineTransparency = OutlineSettings.Transparency;
                         Adornee = Character;
                         FillTransparency = FillSettings.Transparency;
@@ -8166,14 +8164,8 @@
             end
 
             Data.RefreshDescendants = function() 
-                local Character = (typechar and player) or player.Character
-                if not Character then
-                    player.CharacterAdded:Wait()
-                    Character = player.Character
-                end
-                if not Character then return end
-                local Humanoid = Character:FindFirstChild("Humanoid") or Character:WaitForChild("Humanoid", 5)
-                if not Humanoid then return end
+                local Character = (typechar and player) or player.Character or player.CharacterAdded:Wait()
+                local Humanoid = Character:FindFirstChild("Humanoid") or Character:WaitForChild( "Humanoid" )
                 
                 Data.Info.Character = typechar and player or Character
                 Data.Info.Humanoid = Humanoid
@@ -8194,16 +8186,15 @@
                     Items["Holder"]:Destroy()
                 end 
 
-                if Data.Highlight then
-                    Data.Highlight:Destroy()
-                end
+                Data.Highlight:Destroy()  
 
                 if Esp.Players[player.Name] then 
                     Esp.Players[player.Name] = nil
                 end 
             end 
 
-            task.spawn(Data.RefreshDescendants)
+            Data.RefreshDescendants()
+            Esp:Connection(Data.Info.Character.ChildAdded, Data.ToolAdded)
             Esp:Connection(player.CharacterAdded, Data.RefreshDescendants)
 
             -- Recaching element holders that arent neccessary <- roblox calculates math for them even if they have no objects in them or invisible ;(

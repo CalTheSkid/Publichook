@@ -235,40 +235,6 @@ end
 
 local Window = buildUI(configTable)
 
--- Expose ESP globals for logic files
-getgenv().Esp = Esp
-getgenv().MiscOptions = MiscOptions
-getgenv().Options = Options
-
--- Wire up the built-in ESP for all players automatically
-local Players = game:GetService("Players")
-
-local function setupPlayer(player)
-    if player == Players.LocalPlayer then return end
-    task.spawn(function()
-        local ok, err = pcall(function()
-            Esp.CreateObject(player)
-        end)
-        if not ok then
-            warn("[publichook] ESP setup failed for " .. player.Name .. ": " .. tostring(err))
-        else
-            print("[publichook] ESP created for " .. player.Name)
-        end
-    end)
-end
-
-for _, player in Players:GetPlayers() do
-    setupPlayer(player)
-end
-
-Players.PlayerAdded:Connect(setupPlayer)
-
-Players.PlayerRemoving:Connect(function(player)
-    pcall(function()
-        Esp.RemovePlayer(player)
-    end)
-end)
-
 if logicContent then
     local logicFunction, compileErr = loadstring(logicContent)
     if logicFunction then

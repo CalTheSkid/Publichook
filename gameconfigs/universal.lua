@@ -17,29 +17,12 @@ local Config = {
                                     Name = "Enabled",
                                     Flag = "AimbotEnabled",
                                     Default = false,
-                                    Callback = function(val)
-                                        print("[publichook] Aimbot Enabled:", val)
-                                    end,
+                                    Callback = function() end,
                                     Keybind = {
                                         Name = "Aimbot Bind",
                                         Flag = "AimbotBind",
-                                        Default = Enum.KeyCode.F,
+                                        Key = Enum.KeyCode.F,
                                         Mode = "Hold"
-                                    }
-                                },
-                                {
-                                    Type = "Toggle",
-                                    Name = "Show FOV Circle",
-                                    Flag = "AimbotShowFOV",
-                                    Default = false,
-                                    Callback = function(val)
-                                        print("[publichook] Show FOV:", val)
-                                    end,
-                                    Colorpicker = {
-                                        Name = "FOV Circle Color",
-                                        Flag = "AimbotFOVColor",
-                                        Color = Color3.fromRGB(0, 230, 118),
-                                        Transparency = 0.5
                                     }
                                 },
                                 {
@@ -51,9 +34,7 @@ local Config = {
                                     Decimal = 1,
                                     Default = 120,
                                     Suffix = "px",
-                                    Callback = function(val)
-                                        print("[publichook] FOV Radius:", val)
-                                    end
+                                    Callback = function() end
                                 },
                                 {
                                     Type = "Dropdown",
@@ -61,9 +42,7 @@ local Config = {
                                     Flag = "AimbotTargetMode",
                                     Options = {"Distance", "FOV", "Health"},
                                     Default = "Distance",
-                                    Callback = function(val)
-                                        print("[publichook] Target Mode:", val)
-                                    end
+                                    Callback = function() end
                                 }
                             }
                         }
@@ -71,35 +50,6 @@ local Config = {
                 },
                 {
                     Sections = {
-                        {
-                            Name = "Movement",
-                            Side = "Right",
-                            Elements = {
-                                {
-                                    Type = "Slider",
-                                    Name = "WalkSpeed Override",
-                                    Flag = "MovementWalkSpeed",
-                                    Min = 16,
-                                    Max = 150,
-                                    Decimal = 1,
-                                    Default = 16,
-                                    Suffix = " studs",
-                                    Callback = function(val)
-                                        print("[publichook] WalkSpeed:", val)
-                                    end
-                                },
-                                {
-                                    Type = "Dropdown",
-                                    Name = "WalkSpeed Mode",
-                                    Flag = "MovementWSMode",
-                                    Options = {"Velocity", "Humanoid", "CFrame"},
-                                    Default = "Humanoid",
-                                    Callback = function(val)
-                                        print("[publichook] WalkSpeed Mode:", val)
-                                    end
-                                }
-                            }
-                        },
                         {
                             Name = "ESP",
                             Side = "Right",
@@ -109,70 +59,102 @@ local Config = {
                                     Name = "Enabled",
                                     Flag = "ESPEnabled",
                                     Default = false,
-                                    Callback = function(val)
-                                        if getgenv().Options then
-                                            getgenv().Options["Enabled"] = val
-                                        end
-                                    end
+                                    Callback = function() end
                                 },
                                 {
                                     Type = "Toggle",
                                     Name = "Boxes",
                                     Flag = "ESPBoxes",
                                     Default = false,
-                                    Callback = function(val)
-                                        if getgenv().Options then
-                                            getgenv().Options["Boxes"] = val
-                                        end
-                                    end
-                                },
-                                {
-                                    Type = "Toggle",
-                                    Name = "Healthbar",
-                                    Flag = "ESPHealthbar",
-                                    Default = false,
-                                    Callback = function(val)
-                                        if getgenv().Options then
-                                            getgenv().Options["Healthbar"] = val
-                                        end
-                                    end
+                                    Callback = function() end,
+                                    Colorpicker = {
+                                        Name = "Box Color",
+                                        Flag = "ESPBoxColor",
+                                        Color = Color3.fromRGB(255, 255, 255),
+                                        Transparency = 0
+                                    }
                                 },
                                 {
                                     Type = "Toggle",
                                     Name = "Name",
                                     Flag = "ESPName",
                                     Default = false,
-                                    Callback = function(val)
-                                        if getgenv().Options then
-                                            getgenv().Options["Name_Text"] = val
-                                        end
-                                    end
+                                    Callback = function() end,
+                                    Colorpicker = {
+                                        Name = "Name Color",
+                                        Flag = "ESPNameColor",
+                                        Color = Color3.fromRGB(255, 255, 255),
+                                        Transparency = 0
+                                    }
                                 },
                                 {
                                     Type = "Toggle",
                                     Name = "Distance",
                                     Flag = "ESPDistance",
                                     Default = false,
-                                    Callback = function(val)
-                                        if getgenv().Options then
-                                            getgenv().Options["Distance_Text"] = val
-                                        end
-                                    end
+                                    Callback = function() end,
+                                    Colorpicker = {
+                                        Name = "Distance Color",
+                                        Flag = "ESPDistanceColor",
+                                        Color = Color3.fromRGB(255, 255, 255),
+                                        Transparency = 0
+                                    }
+                                },
+                                {
+                                    Type = "Toggle",
+                                    Name = "Health Bar",
+                                    Flag = "ESPHealthBar",
+                                    Default = false,
+                                    Callback = function() end
+                                },
+                                {
+                                    Type = "Toggle",
+                                    Name = "Chams",
+                                    Flag = "ESPChams",
+                                    Default = false,
+                                    Callback = function() end,
+                                    Colorpicker = {
+                                        Name = "Chams Color",
+                                        Flag = "ESPChamsColor",
+                                        Color = Color3.fromRGB(255, 0, 0),
+                                        Transparency = 0.5
+                                    }
                                 },
                                 {
                                     Type = "Slider",
-                                    Name = "Render Distance",
-                                    Flag = "ESPRenderDist",
-                                    Min = 100,
-                                    Max = 10000,
-                                    Decimal = 100,
-                                    Default = 10000,
+                                    Name = "Max Distance",
+                                    Flag = "ESPMaxDist",
+                                    Min = 50,
+                                    Max = 5000,
+                                    Decimal = 50,
+                                    Default = 2000,
                                     Suffix = " studs",
-                                    Callback = function(val)
-                                        if getgenv().Options then
-                                            getgenv().Options["Render Distance"] = val
-                                        end
-                                    end
+                                    Callback = function() end
+                                }
+                            }
+                        },
+                        {
+                            Name = "Movement",
+                            Side = "Right",
+                            Elements = {
+                                {
+                                    Type = "Slider",
+                                    Name = "WalkSpeed",
+                                    Flag = "MovementWalkSpeed",
+                                    Min = 16,
+                                    Max = 150,
+                                    Decimal = 1,
+                                    Default = 16,
+                                    Suffix = " studs",
+                                    Callback = function() end
+                                },
+                                {
+                                    Type = "Dropdown",
+                                    Name = "Speed Mode",
+                                    Flag = "MovementWSMode",
+                                    Options = {"Humanoid", "Velocity"},
+                                    Default = "Humanoid",
+                                    Callback = function() end
                                 }
                             }
                         }
@@ -181,37 +163,35 @@ local Config = {
             }
         },
         {
-            Name = "Miscellaneous",
+            Name = "Misc",
             Columns = {
                 {
                     Sections = {
                         {
-                            Name = "Player Actions",
+                            Name = "Server",
                             Side = "Left",
                             Elements = {
                                 {
                                     Type = "Button",
-                                    Name = "Rejoin Server",
+                                    Name = "Rejoin",
                                     Callback = function()
-                                        local TeleportService = game:GetService("TeleportService")
-                                        local Players = game:GetService("Players")
-                                        TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, Players.LocalPlayer)
+                                        local TP = game:GetService("TeleportService")
+                                        local P = game:GetService("Players")
+                                        TP:TeleportToPlaceInstance(game.PlaceId, game.JobId, P.LocalPlayer)
                                     end
                                 },
                                 {
                                     Type = "Button",
                                     Name = "Server Hop",
                                     Callback = function()
-                                        local HttpService = game:GetService("HttpService")
-                                        local TeleportService = game:GetService("TeleportService")
                                         local ok, result = pcall(function()
-                                            return HttpService:JSONDecode(game:HttpGet(
-                                                "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"
-                                            ))
+                                            return game:GetService("HttpService"):JSONDecode(
+                                                game:HttpGet("https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Asc&limit=100")
+                                            )
                                         end)
                                         if ok and result and result.data and #result.data > 0 then
-                                            local server = result.data[math.random(1, #result.data)]
-                                            TeleportService:TeleportToPlaceInstance(game.PlaceId, server.id)
+                                            local s = result.data[math.random(1, #result.data)]
+                                            game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, s.id)
                                         end
                                     end
                                 }
@@ -225,14 +205,8 @@ local Config = {
                             Name = "Credits",
                             Side = "Right",
                             Elements = {
-                                {
-                                    Type = "Label",
-                                    Name = "Framework: publichook"
-                                },
-                                {
-                                    Type = "Label",
-                                    Name = "UI Library: octohook"
-                                }
+                                { Type = "Label", Name = "publichook framework" },
+                                { Type = "Label", Name = "UI: octohook by @finobe" }
                             }
                         }
                     }
