@@ -542,22 +542,16 @@ do
         end
     end)
 
-    -- Hook mouse.Hit via __index on the Mouse metatable
+    -- Hook mouse.Hit/Target via hookmetamethod on game.__index
     if not getgenv().__SilentAimHooked then
         getgenv().__SilentAimHooked = true
 
-        local mouse = LocalPlayer:GetMouse()
-        local mt    = getrawmetatable(mouse)
-        local oldIndex = rawget(mt, "__index")
-
-        local proxy = setmetatable({}, { __index = mt })
-        proxy.__index = function(self, key)
-            if key == "Hit" and flags().SilentAim and cachedSilentTarget then
-                return CFrame.new(Camera.CFrame.Position, cachedSilentTarget.Position)
+        local __index
+        __index = hookmetamethod(game, "__index", function(t, k)
+            if t:IsA("Mouse") and (k == "Hit" or k == "Target") and flags().SilentAim and cachedSilentTarget then
+                return k == "Hit" and CFrame.new(Camera.CFrame.Position, cachedSilentTarget.Position) or cachedSilentTarget
             end
-            return oldIndex(self, key)
-        end
-
-        setrawmetatable(mouse, proxy)
+            return __index(t, k)
+        end)
     end
 end
