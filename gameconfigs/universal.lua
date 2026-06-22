@@ -244,6 +244,34 @@ local Config = {
                                 },
                                 {
                                     Type = "Toggle",
+                                    Name = "Wall Check",
+                                    Flag = "WallCheck",
+                                    Default = false,
+                                    Callback = function() end,
+                                    Tooltip = {
+                                        Title = "Wall Check",
+                                        Text = "Blocks targeting players behind walls.\nApplies to ESP, Aimbot.",
+                                        Width = 180
+                                    }
+                                },
+                                {
+                                    Type = "Slider",
+                                    Name = "Max Aim Distance",
+                                    Flag = "MaxAimDistance",
+                                    Min = 0,
+                                    Max = 5000,
+                                    Decimal = 50,
+                                    Default = 1000,
+                                    Suffix = " studs",
+                                    Callback = function() end,
+                                    Tooltip = {
+                                        Title = "Max Aim Distance",
+                                        Text = "0 = disabled.\nIgnores players farther than this.",
+                                        Width = 180
+                                    }
+                                },
+                                {
+                                    Type = "Toggle",
                                     Name = "Enabled",
                                     Flag = "MovementEnabled",
                                     Default = false,

@@ -47,7 +47,44 @@ local function isEnemy(player)
         if myTeam and theirTeam and myTeam == theirTeam then return false end
     end
 
+    -- Distance check
+    local maxDist = f.MaxAimDistance
+    if maxDist and maxDist > 0 then
+        local char = player.Character
+        local root = char and char:FindFirstChild("HumanoidRootPart")
+        if root and (root.Position - Camera.CFrame.Position).Magnitude > maxDist then
+            return false
+        end
+    end
+
+    -- Wall check
+    if f.WallCheck then
+        local char = player.Character
+        local root = char and char:FindFirstChild("HumanoidRootPart")
+        if root and not hasLineOfSight(root.Position) then return false end
+    end
+
     return true
+end
+
+local function hasLineOfSight(targetPos)
+    local origin  = Camera.CFrame.Position
+    local delta   = targetPos - origin
+    local dir     = delta.Unit
+    local dist    = delta.Magnitude
+
+    local params = RaycastParams.new()
+    params.FilterType = Enum.RaycastFilterType.Blacklist
+    params.FilterDescendantsInstances = { LocalPlayer.Character, Camera }
+
+    local result = workspace:Raycast(origin, dir * dist, params)
+    if not result then return true end
+
+    local hitModel = result.Instance:FindFirstAncestorOfClass("Model")
+    if hitModel and hitModel:FindFirstChildOfClass("Humanoid") then
+        return true
+    end
+    return false
 end
 
 local function getBoundingBox(char)

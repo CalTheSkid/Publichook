@@ -183,6 +183,12 @@
         end
 
         for name, suffix in FontNames do 
+            -- Skip HTTP if already cached
+            if isfile(suffix) and isfile(name .. ".font") then
+                Fonts[name] = Font.new(getcustomasset(name .. ".font"), Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+                continue
+            end
+
             local Weight = 400 
 
             if name == "Rubik" then -- fuckin stupid 
@@ -349,13 +355,13 @@
                     local Vertical = Camera.ViewportSize.Y
 
                     local NewPosition = dim2(
-                        0,
+                        InitialSize.X.Scale,
                         math.clamp(
                             InitialSize.X.Offset + (Input.Position.X - InitialPosition.X),
                             0,
                             Horizontal - Parent.Size.X.Offset
                         ),
-                        0,
+                        InitialSize.Y.Scale,
                         math.clamp(
                             InitialSize.Y.Offset + (Input.Position.Y - InitialPosition.Y),
                             0,
@@ -1664,6 +1670,7 @@
             local Cfg = {
                 Name = properties.Name or "nebula";
                 Size = properties.Size or dim2(0, 455, 0, 605);
+                Position = properties.Position or dim2(0, 100, 0, 100);
                 Items = {};
                 Tweening = false;
                 Tick = tick();
