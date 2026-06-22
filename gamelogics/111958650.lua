@@ -51,48 +51,6 @@ local function getBoundingBox(char)
     }
 end
 
--- Returns true if player should be targeted/shown (team check, alive check,
--- wall check, distance check — evaluated every call for continuous validation)
-local function isEnemy(player)
-    if not player or not player.Parent then return false end
-    if player == LocalPlayer then return false end
-    local f = flags()
-
-    -- Alive check
-    if f.AliveCheck then
-        local char = player.Character
-        local hum  = char and char:FindFirstChildOfClass("Humanoid")
-        if not hum or hum.Health <= 0 then return false end
-    end
-
-    -- Team check
-    if f.TeamCheck then
-        local myTeam    = LocalPlayer.Team
-        local theirTeam = player.Team
-        if myTeam and theirTeam and myTeam == theirTeam then return false end
-    end
-
-    -- Global distance check
-    local maxDist = f.MaxAimDistance or 1000
-    if maxDist > 0 then
-        local char = player.Character
-        local root = char and char:FindFirstChild("HumanoidRootPart")
-        if root then
-            local d = (root.Position - Camera.CFrame.Position).Magnitude
-            if d > maxDist then return false end
-        end
-    end
-
-    -- Wall check
-    if f.WallCheck then
-        local char = player.Character
-        local root = char and char:FindFirstChild("HumanoidRootPart")
-        if root and not hasLineOfSight(root.Position) then return false end
-    end
-
-    return true
-end
-
 -- Raycast from camera to target — returns false if something opaque blocks the view
 local function hasLineOfSight(targetPos)
     local origin  = Camera.CFrame.Position
@@ -112,6 +70,51 @@ local function hasLineOfSight(targetPos)
         return true
     end
     return false
+end
+
+-- Returns true if player should be targeted/shown (team check, alive check,
+-- wall check, distance check — evaluated every call for continuous validation)
+local function isEnemy(player, skipCombatChecks)
+    if not player or not player.Parent then return false end
+    if player == LocalPlayer then return false end
+    local f = flags()
+
+    -- Alive check
+    if f.AliveCheck then
+        local char = player.Character
+        local hum  = char and char:FindFirstChildOfClass("Humanoid")
+        if not hum or hum.Health <= 0 then return false end
+    end
+
+    -- Team check
+    if f.TeamCheck then
+        local myTeam    = LocalPlayer.Team
+        local theirTeam = player.Team
+        if myTeam and theirTeam and myTeam == theirTeam then return false end
+    end
+
+    -- These checks are for combat (aimbot/silent aim) — skip for ESP
+    if not skipCombatChecks then
+        -- Global distance check
+        local maxDist = f.MaxAimDistance or 1000
+        if maxDist > 0 then
+            local char = player.Character
+            local root = char and char:FindFirstChild("HumanoidRootPart")
+            if root then
+                local d = (root.Position - Camera.CFrame.Position).Magnitude
+                if d > maxDist then return false end
+            end
+        end
+
+        -- Wall check
+        if f.WallCheck then
+            local char = player.Character
+            local root = char and char:FindFirstChild("HumanoidRootPart")
+            if root and not hasLineOfSight(root.Position) then return false end
+        end
+    end
+
+    return true
 end
 
 -- Get the aim part for a player based on the specified hit part flag
@@ -230,19 +233,6 @@ RunService.RenderStepped:Connect(function()
             obj.healthBg.Visible = false
             obj.healthBar.Visible = false
             continue
-        end
-
-        -- Wall check for ESP — hide players behind walls
-        if f.WallCheck then
-            local root = char and char:FindFirstChild("HumanoidRootPart")
-            if root and not hasLineOfSight(root.Position) then
-                for _, l in ipairs(obj.boxLines) do l.Visible = false end
-                obj.nameTag.Visible = false
-                obj.distTag.Visible = false
-                obj.healthBg.Visible = false
-                obj.healthBar.Visible = false
-                continue
-            end
         end
 
         local bb = getBoundingBox(char)

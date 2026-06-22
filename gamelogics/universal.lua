@@ -26,47 +26,7 @@ local function w2s(pos)
     return Vector2.new(screen.X, screen.Y), screen.Z
 end
 
--- Returns true if player should be targeted/shown
--- Respects TeamCheck and AliveCheck flags globally
-local function isEnemy(player)
-    if not player or not player.Parent then return false end
-    if player == LocalPlayer then return false end
-    local f = flags()
-
-    -- Alive check
-    if f.AliveCheck then
-        local char = player.Character
-        local hum  = char and char:FindFirstChildOfClass("Humanoid")
-        if not hum or hum.Health <= 0 then return false end
-    end
-
-    -- Team check
-    if f.TeamCheck then
-        local myTeam    = LocalPlayer.Team
-        local theirTeam = player.Team
-        if myTeam and theirTeam and myTeam == theirTeam then return false end
-    end
-
-    -- Distance check
-    local maxDist = f.MaxAimDistance
-    if maxDist and maxDist > 0 then
-        local char = player.Character
-        local root = char and char:FindFirstChild("HumanoidRootPart")
-        if root and (root.Position - Camera.CFrame.Position).Magnitude > maxDist then
-            return false
-        end
-    end
-
-    -- Wall check
-    if f.WallCheck then
-        local char = player.Character
-        local root = char and char:FindFirstChild("HumanoidRootPart")
-        if root and not hasLineOfSight(root.Position) then return false end
-    end
-
-    return true
-end
-
+-- Raycast from camera to target — returns false if something opaque blocks the view
 local function hasLineOfSight(targetPos)
     local origin  = Camera.CFrame.Position
     local delta   = targetPos - origin
@@ -85,6 +45,50 @@ local function hasLineOfSight(targetPos)
         return true
     end
     return false
+end
+
+-- Returns true if player should be targeted/shown
+-- Respects TeamCheck and AliveCheck flags globally
+local function isEnemy(player, skipCombatChecks)
+    if not player or not player.Parent then return false end
+    if player == LocalPlayer then return false end
+    local f = flags()
+
+    -- Alive check
+    if f.AliveCheck then
+        local char = player.Character
+        local hum  = char and char:FindFirstChildOfClass("Humanoid")
+        if not hum or hum.Health <= 0 then return false end
+    end
+
+    -- Team check
+    if f.TeamCheck then
+        local myTeam    = LocalPlayer.Team
+        local theirTeam = player.Team
+        if myTeam and theirTeam and myTeam == theirTeam then return false end
+    end
+
+    -- These checks are for combat (aimbot/silent aim) — skip for ESP
+    if not skipCombatChecks then
+        -- Distance check
+        local maxDist = f.MaxAimDistance
+        if maxDist and maxDist > 0 then
+            local char = player.Character
+            local root = char and char:FindFirstChild("HumanoidRootPart")
+            if root and (root.Position - Camera.CFrame.Position).Magnitude > maxDist then
+                return false
+            end
+        end
+
+        -- Wall check
+        if f.WallCheck then
+            local char = player.Character
+            local root = char and char:FindFirstChild("HumanoidRootPart")
+            if root and not hasLineOfSight(root.Position) then return false end
+        end
+    end
+
+    return true
 end
 
 local function getBoundingBox(char)
@@ -200,7 +204,7 @@ RunService.RenderStepped:Connect(function()
         local char     = player.Character
         local humanoid = char and char:FindFirstChildOfClass("Humanoid")
         local alive    = humanoid and humanoid.Health > 0
-        local show     = isEnemy(player) and alive
+        local show     = isEnemy(player, true) and alive
 
         if espOn and showChams and show then
             obj.highlight.Adornee          = char
