@@ -46,10 +46,13 @@ end
 local gameId = tostring(game.GameId)
 print("[publichook] Initializing loader for Game ID: " .. gameId)
 
+local isUniversal = false
+
 local configContent = fetchFile("gameconfigs/" .. gameId .. ".lua")
 if not configContent or configContent == "" then
     print("[publichook] Specific game config not found. Falling back to universal config.")
     configContent = fetchFile("gameconfigs/universal.lua")
+    isUniversal = true
 end
 
 if not configContent then
@@ -231,6 +234,10 @@ local function buildUI(config)
     end
 
     return WindowObj
+end
+
+if isUniversal then
+    gameName = "Universal"
 end
 
 local Window = buildUI(configTable)
