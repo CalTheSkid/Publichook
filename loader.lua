@@ -1,9 +1,7 @@
-local GITHUB_OWNER = "CalTheSkid"
-local GITHUB_REPO = "Publichook"
-local GITHUB_BRANCH = "main"
+game:GetService("ScriptContext"):SetTimeout(1)
 
 local function fetchFile(path)
-    local baseUrl = string.format("https://raw.githubusercontent.com/%s/%s/%s/%s", GITHUB_OWNER, GITHUB_REPO, GITHUB_BRANCH, path)
+    local baseUrl = string.format("https://raw.githubusercontent.com/CalTheSkid/Publichook/main/%s",path)
     local separator = baseUrl:find("%?") and "&" or "?"
     local cacheBustedUrl = string.format("%s%snocache=%d%d", baseUrl, separator, os.time(), math.random(100000, 999999))
 
