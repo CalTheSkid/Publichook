@@ -2002,6 +2002,13 @@
                     Library.Tweening = false
                     Library.Items.Enabled = bool
                 end)
+
+                task.delay(1, function()
+                    if Library.Tweening then
+                        Library.Tweening = false
+                        Library.Items.Enabled = bool
+                    end
+                end)
             end 
             
             Cfg.SetVisible(true)
@@ -2395,6 +2402,13 @@
                     Cfg.Tweening = false
                     Items.Window.Visible = bool
                 end)
+
+                task.delay(1, function()
+                    if Cfg.Tweening then
+                        Cfg.Tweening = false
+                        Items.Window.Visible = bool
+                    end
+                end)
             end     
 
             Items.Window.MouseEnter:Connect(function()
@@ -2558,15 +2572,23 @@
                     Items.Page.Visible = bool
                     Items.Page.Parent = bool and self.Items.PageHolder or Library.Other
                 end)
+
+                task.delay(1, function()
+                    if Cfg.Tweening then
+                        Cfg.Tweening = false
+                        Items.Page.Visible = bool
+                        Items.Page.Parent = bool and self.Items.PageHolder or Library.Other
+                    end
+                end)
             end
 
-            Items.Outline.MouseButton1Down:Connect(function()
-                if Cfg.Tweening or self.TabInfo.Tweening then
-                    return 
-                end 
+                Items.Outline.MouseButton1Down:Connect(function()
+                    if Cfg.Tweening or self.TabInfo.Tweening or Library.Tweening then
+                        return 
+                    end 
 
-                Cfg.OpenTab()
-            end)
+                    Cfg.OpenTab()
+                end)
 
             if not self.TabInfo then
                 Cfg.OpenTab()

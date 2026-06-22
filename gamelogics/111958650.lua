@@ -622,74 +622,83 @@ end
 
 do
     local flying = false
-    local flySpeed = 100
-    local maxFlySpeed = 1000
-    local speedIncrement = 0.4
-    local originalGravity = workspace.Gravity
+    local speed = 50
+    local bodyGyro, bodyVelocity
 
-    local function randomizeValue(value, range)
-        return value + (value * (math.random(-range, range) / 100))
+    function startFly()
+        local char = LocalPlayer.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        if not hrp then return end
+
+        bodyGyro = Instance.new("BodyGyro")
+        bodyGyro.P = 9e4
+        bodyGyro.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+        bodyGyro.CFrame = hrp.CFrame
+        bodyGyro.Parent = hrp
+
+        bodyVelocity = Instance.new("BodyVelocity")
+        bodyVelocity.Velocity = Vector3.zero
+        bodyVelocity.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+        bodyVelocity.Parent = hrp
+
+        flying = true
+
+        RunService:BindToRenderStep("Fly", Enum.RenderPriority.Character.Value, function()
+            local cam = workspace.CurrentCamera
+            local moveVec = Vector3.zero
+
+            if UIS:IsKeyDown(Enum.KeyCode.W) then
+                moveVec += cam.CFrame.LookVector
+            end
+            if UIS:IsKeyDown(Enum.KeyCode.S) then
+                moveVec -= cam.CFrame.LookVector
+            end
+            if UIS:IsKeyDown(Enum.KeyCode.A) then
+                moveVec -= cam.CFrame.RightVector
+            end
+            if UIS:IsKeyDown(Enum.KeyCode.D) then
+                moveVec += cam.CFrame.RightVector
+            end
+            if UIS:IsKeyDown(Enum.KeyCode.Space) then
+                moveVec += Vector3.new(0, 1, 0)
+            end
+            if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then
+                moveVec -= Vector3.new(0, 1, 0)
+            end
+
+            if moveVec.Magnitude > 0 then
+                moveVec = moveVec.Unit * speed
+            end
+
+            bodyVelocity.Velocity = moveVec
+            bodyGyro.CFrame = cam.CFrame
+        end)
     end
 
-    local function fly()
-        while flying do
-            local char = LocalPlayer.Character
-            local root = char and char:FindFirstChild("HumanoidRootPart")
-            if not root then
-                RunService.RenderStepped:Wait()
-                continue
-            end
+    function stopFly()
+        flying = false
+        RunService:UnbindFromRenderStep("Fly")
 
-            local md = Vector3.new()
-            local cf = workspace.CurrentCamera.CFrame
-
-            md = md + (UIS:IsKeyDown(Enum.KeyCode.W) and cf.LookVector or Vector3.new())
-            md = md - (UIS:IsKeyDown(Enum.KeyCode.S) and cf.LookVector or Vector3.new())
-            md = md - (UIS:IsKeyDown(Enum.KeyCode.A) and cf.RightVector or Vector3.new())
-            md = md + (UIS:IsKeyDown(Enum.KeyCode.D) and cf.RightVector or Vector3.new())
-            md = md + (UIS:IsKeyDown(Enum.KeyCode.Space) and Vector3.new(0, 1, 0) or Vector3.new())
-            md = md - (UIS:IsKeyDown(Enum.KeyCode.LeftShift) and Vector3.new(0, 1, 0) or Vector3.new())
-
-            if md.Magnitude > 0 then
-                flySpeed = math.min(flySpeed + speedIncrement, maxFlySpeed)
-                md = md.Unit * math.min(randomizeValue(flySpeed, 10), maxFlySpeed)
-                root.Velocity = md * 0.5
-            else
-                root.Velocity = Vector3.new(0, 0, 0)
-            end
-
-            RunService.RenderStepped:Wait()
-        end
+        if bodyGyro then bodyGyro:Destroy() end
+        if bodyVelocity then bodyVelocity:Destroy() end
     end
-
-    UIS.InputBegan:Connect(function(input, gp)
-        if gp then return end
-        if input.KeyCode == Enum.KeyCode.F then
-            if not flags().Fly then return end
-            flying = not flying
-            if flying then
-                workspace.Gravity = 0
-                task.spawn(fly)
-            else
-                flySpeed = 100
-                local char = LocalPlayer.Character
-                local root = char and char:FindFirstChild("HumanoidRootPart")
-                if root then root.Velocity = Vector3.new(0, 0, 0) end
-                workspace.Gravity = originalGravity
-            end
-        end
-    end)
 
     task.spawn(function()
-        while task.wait(0.5) do
-            if not flags().Fly and flying then
-                flying = false
-                flySpeed = 100
-                local char = LocalPlayer.Character
-                local root = char and char:FindFirstChild("HumanoidRootPart")
-                if root then root.Velocity = Vector3.new(0, 0, 0) end
-                workspace.Gravity = originalGravity
+        local wasActive = false
+        while task.wait() do
+            local f = flags()
+            local bind = f.FlyBind
+            if not bind or not f.Fly then
+                if flying then stopFly() end
+                wasActive = false
+                continue
             end
+            if bind.Active and not wasActive then
+                if not flying then startFly() end
+            elseif wasActive and not bind.Active then
+                if flying then stopFly() end
+            end
+            wasActive = bind.Active
         end
     end)
 end
