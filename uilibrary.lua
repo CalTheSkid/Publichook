@@ -332,7 +332,6 @@
 
         function Library:Draggify(Parent)
             local Dragging = false 
-            local IntialSize = Parent.Position
             local InitialPosition 
 
             Parent.InputBegan:Connect(function(Input)
@@ -358,14 +357,14 @@
                         InitialSize.X.Scale,
                         math.clamp(
                             InitialSize.X.Offset + (Input.Position.X - InitialPosition.X),
-                            0,
-                            Horizontal - Parent.Size.X.Offset
+                            -InitialSize.X.Scale * Horizontal,
+                            Horizontal * (1 - InitialSize.X.Scale) - Parent.Size.X.Offset
                         ),
                         InitialSize.Y.Scale,
                         math.clamp(
                             InitialSize.Y.Offset + (Input.Position.Y - InitialPosition.Y),
-                            0,
-                            Vertical - Parent.Size.Y.Offset
+                            -InitialSize.Y.Scale * Vertical,
+                            Vertical * (1 - InitialSize.Y.Scale) - Parent.Size.Y.Offset
                         )
                     )
 

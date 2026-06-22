@@ -215,9 +215,10 @@ RunService.RenderStepped:Connect(function()
         local char = player.Character
         local hum  = char and char:FindFirstChildOfClass("Humanoid")
         local alive = hum and hum.Health > 0
+        local show = isEnemy(player, true) and alive
 
         -- Chams (not affected by wall check — only alive check)
-        if espOn and showChams and alive then
+        if espOn and showChams and show then
             obj.highlight.Adornee = char
             obj.highlight.FillColor = chamsColor
             obj.highlight.FillTransparency = chamsAlpha
@@ -226,7 +227,7 @@ RunService.RenderStepped:Connect(function()
             obj.highlight.Enabled = false
         end
 
-        if not espOn or not alive then
+        if not espOn or not show then
             for _, l in ipairs(obj.boxLines) do l.Visible = false end
             obj.nameTag.Visible = false
             obj.distTag.Visible = false
