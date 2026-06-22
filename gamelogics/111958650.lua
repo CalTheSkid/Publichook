@@ -459,11 +459,9 @@ do
     end)
 end
 
--- ─── SILENT AIM (mouse.Hit index hook) ─────────────────────────────────────
+-- ─── SILENT AIM ─────────────────────────────────────────────────────────────
 
 do
-    local cachedSilentTarget = nil
-
     local saFOVCircle = Drawing.new("Circle")
     saFOVCircle.Thickness  = 1
     saFOVCircle.Color      = Color3.fromRGB(255, 100, 100)
@@ -471,35 +469,10 @@ do
     saFOVCircle.Visible    = false
     saFOVCircle.NumSides   = 64
 
-    local function pickSilentTarget(fov, mode)
-        local mousePos = getMousePos()
-        local best, bestVal = nil, math.huge
-        for _, p in ipairs(Players:GetPlayers()) do
-            if not isEnemy(p) then continue end
-            local part = getAimPart(p, "SilentAimHitPart")
-            if not part then continue end
-            local sp, inView = Camera:WorldToViewportPoint(part.Position)
-            if not inView or sp.Z <= 0 then continue end
-            local d2 = (Vector2.new(sp.X, sp.Y) - mousePos).Magnitude
-            if d2 > fov then continue end
-            local val
-            if mode == "Health" then
-                val = p.Character:FindFirstChildOfClass("Humanoid").Health
-            elseif mode == "Distance" then
-                val = (part.Position - Camera.CFrame.Position).Magnitude
-            else
-                val = d2
-            end
-            if val < bestVal then best, bestVal = part, val end
-        end
-        return best
-    end
-
-    -- Update cached target every frame
+    -- Sync config to camera attributes every frame + draw FOV circle
     RunService.RenderStepped:Connect(function()
         local f = flags()
 
-        -- FOV circle
         if f.SilentAimFOVCircle then
             local cd = f.SilentAimFOVCircleColor
             saFOVCircle.Color    = cd and cd.Color or Color3.fromRGB(255, 100, 100)
@@ -510,51 +483,137 @@ do
             saFOVCircle.Visible = false
         end
 
-        if not f.SilentAim then
-            cachedSilentTarget = nil
-            return
-        end
-
-        local fov  = f.SilentAimFOV or 200
-        local mode = f.SilentAimTargetMode or "FOV"
-
-        -- Every frame: validate the cached target (alive, team, wall, distance)
-        if cachedSilentTarget then
-            local player = Players:GetPlayerFromCharacter(cachedSilentTarget:FindFirstAncestorOfClass("Model"))
-            if not player or not isEnemy(player) then
-                cachedSilentTarget = nil
-            end
-        end
-
-        -- Drop if left FOV
-        if cachedSilentTarget then
-            local sp, inView = Camera:WorldToViewportPoint(cachedSilentTarget.Position)
-            if not inView or sp.Z <= 0 then
-                cachedSilentTarget = nil
-            elseif (Vector2.new(sp.X, sp.Y) - getMousePos()).Magnitude > fov then
-                cachedSilentTarget = nil
-            end
-        end
-
-        -- Pick a new target if needed
-        if not cachedSilentTarget then
-            cachedSilentTarget = pickSilentTarget(fov, mode)
-        end
+        Camera:SetAttribute("BN_SilentAim", f.SilentAim or false)
+        Camera:SetAttribute("BN_FOV", f.SilentAimFOV or 200)
+        Camera:SetAttribute("BN_HitPart", f.SilentAimHitPart or "Head")
+        Camera:SetAttribute("BN_WallCheck", f.WallCheck or false)
     end)
 
-    -- Hook Camera.CoordinateFrame read by Arsenal's weapon scripts
+    -- Actor-based hook (only run once)
     if not getgenv().__SilentAimHooked then
         getgenv().__SilentAimHooked = true
 
-        local oldIndex
-        oldIndex = hookmetamethod(game, "__index", newcclosure(function(self, index)
-            if flags().SilentAim and self == Camera and index == "CoordinateFrame" and cachedSilentTarget then
-                local source = debug.info(3, "s") or ""
-                if string.match(source, "Client.Functions.Weapons") and debug.info(debug.info(3, "f"), "n") ~= "RotCamera" then
-                    return CFrame.new(Camera.CFrame.Position, cachedSilentTarget.Position)
-                end
+        local actorOk = pcall(function()
+            if not (getactors and run_on_actor) then
+                error("executor lacks actor support (getactors/run_on_actor)")
             end
-            return oldIndex(self, index)
-        end))
+            local actors = getactors()
+            local actor = actors and actors[1]
+            if not actor then
+                error("no actors available")
+            end
+
+            run_on_actor(actor, [==[
+                local players = game:GetService("Players")
+                local input_service = game:GetService("UserInputService")
+                local local_player = players.LocalPlayer
+                local camera = workspace.CurrentCamera
+
+                local function cfg(name, default)
+                    local v = camera:GetAttribute(name)
+                    if v == nil then return default end
+                    return v
+                end
+
+                local function get_closest_target()
+                    if not cfg("BN_SilentAim", false) then return nil end
+
+                    local fov = cfg("BN_FOV", 200)
+                    local hitpart = cfg("BN_HitPart", "Head")
+                    local wallcheck = cfg("BN_WallCheck", false)
+
+                    local closest_part = nil
+                    local closest_distance = fov
+                    local local_team = local_player.Team
+                    local mouse_location = input_service:GetMouseLocation()
+                    local cam_pos = camera.CFrame.Position
+
+                    for _, player in players:GetPlayers() do
+                        if player == local_player then continue end
+                        if local_team and player.Team == local_team then continue end
+
+                        local character = player.Character
+                        if not character then continue end
+
+                        local part = character:FindFirstChild(hitpart) or character:FindFirstChild("Head")
+                        if not part then continue end
+
+                        local nrpbs = player:FindFirstChild("NRPBS")
+                        if not nrpbs then continue end
+                        local health = nrpbs:FindFirstChild("Health")
+                        if not health or health.Value <= 0 then continue end
+
+                        local screen_pos, on_screen = camera:WorldToViewportPoint(part.Position)
+                        if not on_screen then continue end
+
+                        local distance = (Vector2.new(screen_pos.X, screen_pos.Y) - mouse_location).Magnitude
+                        if distance < closest_distance then
+                            if wallcheck then
+                                local params = RaycastParams.new()
+                                params.FilterType = Enum.RaycastFilterType.Exclude
+                                params.FilterDescendantsInstances = { character, local_player.Character }
+                                params.IgnoreWater = true
+                                pcall(function() params.RespectCanCollide = true end)
+                                local dir = part.Position - cam_pos
+                                local result = workspace:Raycast(cam_pos, dir, params)
+                                if result then
+                                    continue
+                                end
+                            end
+                            closest_distance = distance
+                            closest_part = part
+                        end
+                    end
+
+                    return closest_part
+                end
+
+                local old_index
+                old_index = hookmetamethod(game, "__index", newcclosure(function(self, index)
+                    if self == camera and index == "CoordinateFrame" then
+                        local source = debug.info(3, "s")
+                        local name = debug.info(3, "n")
+                        if source and string.find(source, "First") and name ~= "RotCamera" then
+                            local info = debug.getinfo(3)
+                            if info and info.nups == 35 then
+                                local hit_part = get_closest_target()
+                                if hit_part then
+                                    return CFrame.new(camera.CFrame.Position, hit_part.Position)
+                                end
+                            end
+                        end
+                    end
+                    return old_index(self, index)
+                end))
+            ]==])
+        end)
+
+        if not actorOk then
+            warn("[publichook] Silent Aim: actor hook failed, falling back to main thread hook")
+            local oldIndex
+            oldIndex = hookmetamethod(game, "__index", newcclosure(function(self, index)
+                if flags().SilentAim and self == Camera and index == "CoordinateFrame" then
+                    local source = debug.info(3, "s") or ""
+                    if string.match(source, "Client.Functions.Weapons") and debug.info(debug.info(3, "f"), "n") ~= "RotCamera" then
+                        local mousePos = getMousePos()
+                        local f = flags()
+                        local best, bestDist = nil, f.SilentAimFOV or 200
+                        for _, p in ipairs(Players:GetPlayers()) do
+                            if not isEnemy(p) then continue end
+                            local part = getAimPart(p, "SilentAimHitPart")
+                            if not part then continue end
+                            local sp, inView = Camera:WorldToViewportPoint(part.Position)
+                            if not inView or sp.Z <= 0 then continue end
+                            local d = (Vector2.new(sp.X, sp.Y) - mousePos).Magnitude
+                            if d < bestDist then best, bestDist = part, d end
+                        end
+                        if best then
+                            return CFrame.new(Camera.CFrame.Position, best.Position)
+                        end
+                    end
+                end
+                return oldIndex(self, index)
+            end))
+        end
     end
 end
