@@ -266,18 +266,7 @@ local Config = {
                                         Width = 220
                                     }
                                 },
-                                {
-                                    Type = "Toggle",
-                                    Name = "No Spread",
-                                    Flag = "NoSpread",
-                                    Default = false,
-                                    Callback = function() end,
-                                    Tooltip = {
-                                        Title = "No Spread",
-                                        Text = "!! CANT BE DISABLED, MUST REJOIN TO DISABLED !!",
-                                        Width = 220
-                                    }
-                                }
+
                             }
                         }
                     }
