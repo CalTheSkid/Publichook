@@ -247,7 +247,13 @@ local Config = {
                                         Flag = "BhopBind",
                                         Mode = "Toggle"
                                     }
-                                },
+                                }
+                            }
+                        },
+                        {
+                            Name = "Gun Mods",
+                            Side = "Left",
+                            Elements = {
                                 {
                                     Type = "Toggle",
                                     Name = "No Recoil",
@@ -448,6 +454,33 @@ local Config = {
                             Elements = {
                                 { Type = "Label", Name = "publichook framework" },
                                 { Type = "Label", Name = "UI: octohook by @finobe" }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        {
+            Name = "Exploits",
+            Columns = {
+                {
+                    Sections = {
+                        {
+                            Name = "Movement",
+                            Side = "Left",
+                            Elements = {
+                                {
+                                    Type = "Toggle",
+                                    Name = "Fly",
+                                    Flag = "Fly",
+                                    Default = false,
+                                    Callback = function() end,
+                                    Keybind = {
+                                        Name = "Fly Bind",
+                                        Flag = "FlyBind",
+                                        Mode = "Toggle"
+                                    }
+                                }
                             }
                         }
                     }

@@ -405,6 +405,63 @@ local Config = {
                     }
                 }
             }
+        },
+        {
+            Name = "Exploits",
+            Columns = {
+                {
+                    Sections = {
+                        {
+                            Name = "Unlocker",
+                            Side = "Left",
+                            Elements = {
+                                {
+                                    Type = "Button",
+                                    Name = "Old Case Unlocker",
+                                    Callback = function()
+                                        local Players = cloneref(game:GetService("Players"))
+                                        local Crates = {
+                                            "WinterCrate",
+                                            "UnusualCrate",
+                                            "HalloweenCrate",
+                                            "GiftCrate"
+                                        }
+                                        for _, Crate in Crates do
+                                            local frame = Players.LocalPlayer.PlayerGui.Menew.Shop.Cases:FindFirstChild(Crate)
+                                            if frame then
+                                                frame.Visible = true
+                                            end
+                                        end
+                                    end,
+                                    Tooltip = {
+                                        Title = "Old Case Unlocker",
+                                        Text = "Makes old/unobtainable crates visible in the shop.",
+                                        Width = 180
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            Name = "Movement",
+                            Side = "Left",
+                            Elements = {
+                                {
+                                    Type = "Toggle",
+                                    Name = "Fly",
+                                    Flag = "Fly",
+                                    Default = false,
+                                    Callback = function() end,
+                                    Keybind = {
+                                        Name = "Fly Bind",
+                                        Flag = "FlyBind",
+                                        Mode = "Toggle"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     ConfigsTab = {
