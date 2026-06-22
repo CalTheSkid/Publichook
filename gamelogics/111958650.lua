@@ -542,16 +542,25 @@ do
         end
     end)
 
-    -- Hook mouse.Hit/Target via hookmetamethod on game.__index
+    -- Hook __namecall to intercept FindPartOnRayWithIgnoreList for silent aim
     if not getgenv().__SilentAimHooked then
         getgenv().__SilentAimHooked = true
 
-        local __index
-        __index = hookmetamethod(game, "__index", function(t, k)
-            if t:IsA("Mouse") and (k == "Hit" or k == "Target") and flags().SilentAim and cachedSilentTarget then
-                return k == "Hit" and CFrame.new(Camera.CFrame.Position, cachedSilentTarget.Position) or cachedSilentTarget
+        local function PositionToRay(origin, target)
+            return Ray.new(origin, (target - origin).Unit * 1000)
+        end
+
+        local OldNameCall
+        OldNameCall = hookmetamethod(game, "__namecall", function(Self, ...)
+            local Method = getnamecallmethod()
+
+            if Method == "FindPartOnRayWithIgnoreList" and flags().SilentAim and cachedSilentTarget then
+                local Args = {...}
+                Args[1] = PositionToRay(Camera.CFrame.Position, cachedSilentTarget.Position)
+                return OldNameCall(Self, unpack(Args))
             end
-            return __index(t, k)
+
+            return OldNameCall(Self, ...)
         end)
     end
 end
