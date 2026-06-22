@@ -568,7 +568,6 @@ local Config = {
             }
         }
     },
-    Modules = {"ragebot", "silentaim", "wallbang"},
     ConfigsTab = {
         TabName = "Settings"
     }

@@ -619,3 +619,185 @@ task.spawn(function()
         end
     end
 end)
+
+-- ─── RAGEBOT ────────────────────────────────────────────────────────────────
+
+do
+    local rs = game:GetService("ReplicatedStorage")
+    local enums = require(rs.Modules.EnumLibrary)
+    local fighter = require(LocalPlayer.PlayerScripts.Controllers.FighterController)
+
+    local params = RaycastParams.new()
+    params.FilterType = Enum.RaycastFilterType.Exclude
+    params.IgnoreWater = true
+
+    local heights = {0, 12, 16, 20, 24, 28, 32, 36, 40, 50, 60, 75, 90, 115, 130, 145, 160, 175, 190, 205, 220, 235, 250, 275}
+
+    task.spawn(function()
+        while task.wait(0.1) do
+            if not flags().RivalsRagebot then continue end
+
+            local f = fighter.LocalFighter
+            if not f then continue end
+
+            local i = f.EquippedItem
+            if not i or not i.Info then continue end
+            if (i:Get("Ammo") or 0) <= 0 then continue end
+            if i._shoot_cooldown and tick() < i._shoot_cooldown then continue end
+
+            local c = LocalPlayer.Character
+            if not c or not c:FindFirstChild("HumanoidRootPart") then continue end
+
+            local best, bestd = nil, 9e9
+            for _, p in ipairs(Players:GetPlayers()) do
+                if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Head") then
+                    local d = (c.HumanoidRootPart.Position - p.Character.Head.Position).Magnitude
+                    if d < bestd then bestd = d; best = p.Character.Head end
+                end
+            end
+            if not best then continue end
+
+            local cam = workspace.CurrentCamera
+            if not cam then continue end
+
+            params.FilterDescendantsInstances = {LocalPlayer.Character, best.Parent}
+            local from = cam.CFrame.Position
+            local sp = from
+            if workspace:Raycast(from, best.Position - from, params) then
+                sp = nil
+                for _, h in ipairs(heights) do
+                    local p = from + Vector3.new(0, h, 0)
+                    if not workspace:Raycast(p, best.Position - p, params) then
+                        sp = p; break
+                    end
+                end
+            end
+            if not sp then continue end
+
+            local t = best.Position
+            local look = CFrame.lookAt(sp, t)
+            local rx, ry, rz = look:ToOrientation()
+            local e = {[utf8.char(0)] = sp.X, [utf8.char(1)] = sp.Y, [utf8.char(2)] = sp.Z, [utf8.char(3)] = rx, [utf8.char(4)] = ry, [utf8.char(5)] = rz}
+            local o = best.CFrame:ToObjectSpace(CFrame.new(t))
+            local oa, ob, oc = o:ToOrientation()
+
+            rs.Remotes.Replication.Fighter.UseItem:FireServer(i:Get("ObjectID"), enums:ToEnum("StartShooting"),
+                {[utf8.char(1)] = {[utf8.char(0)] = e, [utf8.char(1)] = e, [utf8.char(2)] = best, [utf8.char(3)] = {[utf8.char(0)] = o.X, [utf8.char(1)] = o.Y, [utf8.char(2)] = o.Z, [utf8.char(3)] = oa, [utf8.char(4)] = ob, [utf8.char(5)] = oc}}},
+                nil)
+        end
+    end)
+end
+
+-- ─── SILENT AIM + WALLBANG ─────────────────────────────────────────────────
+
+do
+    local rs = game:GetService("ReplicatedStorage")
+
+    if getgenv().__RivalsCombatHooked then return end
+    getgenv().__RivalsCombatHooked = true
+
+    local heights = {0, 12, 16, 20, 24, 28, 32, 36, 40, 50, 60, 75, 90, 115, 130, 145, 160, 175, 190, 205, 220, 235, 250, 275}
+
+    local params = RaycastParams.new()
+    params.FilterType = Enum.RaycastFilterType.Exclude
+    params.IgnoreWater = true
+
+    local oldNamecall
+    oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+        if getnamecallmethod() == "FireServer" and self == rs.Remotes.Replication.Fighter.UseItem then
+            local args = {...}
+            local data = args[3]
+            if data and type(data) == "table" then
+                local inner = data[utf8.char(1)]
+                if inner then
+                    local posData = inner[utf8.char(0)]
+                    local targetPart = inner[utf8.char(2)]
+                    if posData and targetPart then
+                        local f = flags()
+
+                        -- Wallbang: raise position to clear obstacles
+                        if f.RivalsWallbang then
+                            local from = Vector3.new(posData[utf8.char(0)], posData[utf8.char(1)], posData[utf8.char(2)])
+                            local to = targetPart.Position
+                            params.FilterDescendantsInstances = {LocalPlayer.Character, targetPart.Parent}
+                            local sp = from
+                            if workspace:Raycast(from, to - from, params) then
+                                sp = nil
+                                for _, h in ipairs(heights) do
+                                    local p = from + Vector3.new(0, h, 0)
+                                    if not workspace:Raycast(p, to - p, params) then
+                                        sp = p; break
+                                    end
+                                end
+                            end
+                            if sp then
+                                posData[utf8.char(0)] = sp.X
+                                posData[utf8.char(1)] = sp.Y
+                                posData[utf8.char(2)] = sp.Z
+                                local ic = inner[utf8.char(1)]
+                                if ic then
+                                    ic[utf8.char(0)] = sp.X
+                                    ic[utf8.char(1)] = sp.Y
+                                    ic[utf8.char(2)] = sp.Z
+                                end
+                            end
+                        end
+
+                        -- Silent aim: redirect aim to nearest target within FOV
+                        if f.RivalsSilentAim then
+                            local camera = workspace.CurrentCamera
+                            local center = camera.ViewportSize / 2
+                            local fov = f.RivalsSilentAimFOV or 360
+                            local hitPart = f.RivalsSilentAimHitPart or "Head"
+                            local best, bestd = nil, fov
+                            for _, p in ipairs(Players:GetPlayers()) do
+                                if p == LocalPlayer then continue end
+                                local char = p.Character
+                                if not char then continue end
+                                local hum = char:FindFirstChildOfClass("Humanoid")
+                                if not hum or hum.Health <= 0 then continue end
+                                local part = char:FindFirstChild(hitPart) or char:FindFirstChild("HumanoidRootPart")
+                                if not part then continue end
+                                local sp, inView = camera:WorldToViewportPoint(part.Position)
+                                if not inView then continue end
+                                local d = (Vector2.new(sp.X, sp.Y) - center).Magnitude
+                                if d < bestd then bestd = d; best = part end
+                            end
+                            if best then
+                                local from = Vector3.new(posData[utf8.char(0)], posData[utf8.char(1)], posData[utf8.char(2)])
+                                local toPt = best.Position
+                                local look = CFrame.lookAt(from, toPt)
+                                local rx, ry, rz = look:ToOrientation()
+                                posData[utf8.char(3)] = rx
+                                posData[utf8.char(4)] = ry
+                                posData[utf8.char(5)] = rz
+                                local ic = inner[utf8.char(1)]
+                                if ic then
+                                    ic[utf8.char(3)] = rx
+                                    ic[utf8.char(4)] = ry
+                                    ic[utf8.char(5)] = rz
+                                end
+                                inner[utf8.char(2)] = best
+                                local objSpace = best.CFrame:ToObjectSpace(CFrame.new(toPt))
+                                local oa, ob, oc = objSpace:ToOrientation()
+                                local td = inner[utf8.char(3)]
+                                if td then
+                                    td[utf8.char(0)] = objSpace.X
+                                    td[utf8.char(1)] = objSpace.Y
+                                    td[utf8.char(2)] = objSpace.Z
+                                    td[utf8.char(3)] = oa
+                                    td[utf8.char(4)] = ob
+                                    td[utf8.char(5)] = oc
+                                end
+                            end
+                        end
+
+                        args[3] = data
+                    end
+                end
+            end
+            return oldNamecall(self, unpack(args))
+        end
+        return oldNamecall(self, ...)
+    end)
+end

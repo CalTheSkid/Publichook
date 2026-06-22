@@ -256,31 +256,4 @@ else
     print("[publichook] No gameplay logic file loaded.")
 end
 
-if configTable.Modules and type(configTable.Modules) == "table" then
-    for _, moduleName in ipairs(configTable.Modules) do
-        local modPath = "custommodules/" .. gameId .. "/" .. moduleName .. ".lua"
-        local moduleContent = fetchFile(modPath)
-        if not moduleContent then
-            local fallbackPath = "custommodules/universal/" .. moduleName .. ".lua"
-            moduleContent = fetchFile(fallbackPath)
-        end
-        if moduleContent then
-            local modFunc, modErr = loadstring(moduleContent)
-            if modFunc then
-                task.spawn(function()
-                    local ok, err = pcall(function()
-                        local init = modFunc()
-                        if type(init) == "function" then
-                            init()
-                        end
-                    end)
-                    if not ok then
-                        warn("[publichook] Module '" .. moduleName .. "' error: " .. tostring(err))
-                    end
-                end)
-            else
-                warn("[publichook] Module '" .. moduleName .. "' compile error: " .. tostring(modErr))
-            end
-        end
-    end
-end
+
