@@ -496,8 +496,79 @@ local Config = {
                     }
                 }
             }
+        },
+        {
+            Sections = {
+                {
+                    Name = "Ragebot",
+                    Side = "Left",
+                    Elements = {
+                        {
+                            Type = "Toggle",
+                            Name = "Enabled",
+                            Flag = "RivalsRagebot",
+                            Default = false,
+                            Callback = function() end
+                        }
+                    }
+                }
+            }
+        },
+        {
+            Sections = {
+                {
+                    Name = "Silent Aim",
+                    Side = "Left",
+                    Elements = {
+                        {
+                            Type = "Toggle",
+                            Name = "Enabled",
+                            Flag = "RivalsSilentAim",
+                            Default = false,
+                            Callback = function() end
+                        },
+                        {
+                            Type = "Slider",
+                            Name = "FOV Radius",
+                            Flag = "RivalsSilentAimFOV",
+                            Min = 10,
+                            Max = 800,
+                            Decimal = 1,
+                            Default = 360,
+                            Suffix = "px",
+                            Callback = function() end
+                        },
+                        {
+                            Type = "Dropdown",
+                            Name = "Hit Part",
+                            Flag = "RivalsSilentAimHitPart",
+                            Options = {"Head", "HumanoidRootPart"},
+                            Default = "Head",
+                            Callback = function() end
+                        }
+                    }
+                }
+            }
+        },
+        {
+            Sections = {
+                {
+                    Name = "Wallbang",
+                    Side = "Left",
+                    Elements = {
+                        {
+                            Type = "Toggle",
+                            Name = "Enabled",
+                            Flag = "RivalsWallbang",
+                            Default = false,
+                            Callback = function() end
+                        }
+                    }
+                }
+            }
         }
     },
+    Modules = {"ragebot", "silentaim", "wallbang"},
     ConfigsTab = {
         TabName = "Settings"
     }
