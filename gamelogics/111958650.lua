@@ -542,25 +542,19 @@ do
         end
     end)
 
-    -- Hook __namecall to intercept FindPartOnRayWithIgnoreList for silent aim
+    -- Hook Camera.CoordinateFrame read by Arsenal's weapon scripts
     if not getgenv().__SilentAimHooked then
         getgenv().__SilentAimHooked = true
 
-        local function PositionToRay(origin, target)
-            return Ray.new(origin, (target - origin).Unit * 1000)
-        end
-
-        local OldNameCall
-        OldNameCall = hookmetamethod(game, "__namecall", function(Self, ...)
-            local Method = getnamecallmethod()
-
-            if Method == "FindPartOnRayWithIgnoreList" and flags().SilentAim and cachedSilentTarget then
-                local Args = {...}
-                Args[1] = PositionToRay(Camera.CFrame.Position, cachedSilentTarget.Position)
-                return OldNameCall(Self, unpack(Args))
+        local oldIndex
+        oldIndex = hookmetamethod(game, "__index", newcclosure(function(self, index)
+            if flags().SilentAim and self == Camera and index == "CoordinateFrame" and cachedSilentTarget then
+                local source = debug.info(3, "s") or ""
+                if string.match(source, "Client.Functions.Weapons") and debug.info(debug.info(3, "f"), "n") ~= "RotCamera" then
+                    return CFrame.new(Camera.CFrame.Position, cachedSilentTarget.Position)
+                end
             end
-
-            return OldNameCall(Self, ...)
-        end)
+            return oldIndex(self, index)
+        end))
     end
 end
